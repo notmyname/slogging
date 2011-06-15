@@ -21,7 +21,7 @@ import hashlib
 import pickle
 import time
 
-from swift.common import internal_proxy
+from slogging import internal_proxy
 from swift.stats import log_processor
 from swift.common.exceptions import ChunkReadTimeout
 
@@ -30,12 +30,14 @@ class FakeUploadApp(object):
     def __init__(self, *args, **kwargs):
         pass
 
+
 class DumbLogger(object):
     def __getattr__(self, n):
         return self.foo
 
     def foo(self, *a, **kw):
         pass
+
 
 class DumbInternalProxy(object):
     def __init__(self, code=200, timeout=False, bad_compressed=False):
@@ -79,6 +81,7 @@ class DumbInternalProxy(object):
                 yield 'data'
         return self.code, data()
 
+
 class TestLogProcessor(unittest.TestCase):
 
     access_test_line = 'Jul  9 04:14:30 saio proxy-server 1.2.3.4 4.5.6.7 '\
@@ -116,13 +119,14 @@ use = egg:swift#proxy
     def test_access_log_line_parser(self):
         access_proxy_config = self.proxy_config.copy()
         access_proxy_config.update({
-                        'log-processor-access': {
-                            'source_filename_format':'%Y%m%d%H*',
-                            'class_path':
-                                'swift.stats.access_processor.AccessLogProcessor'
+                    'log-processor-access': {
+                        'source_filename_format': '%Y%m%d%H*',
+                        'class_path':
+                            'swift.stats.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(access_proxy_config, DumbLogger())
-        result = p.plugins['access']['instance'].log_line_parser(self.access_test_line)
+        result = p.plugins['access']['instance'].log_line_parser(
+                                                    self.access_test_line)
         self.assertEquals(result, {'code': 200,
            'processing_time': '0.0262',
            'auth_token': 'tk4e350daf-9338-4cc6-aabb-090e49babfbd',
@@ -153,12 +157,13 @@ use = egg:swift#proxy
     def test_process_one_access_file(self):
         access_proxy_config = self.proxy_config.copy()
         access_proxy_config.update({
-                        'log-processor-access': {
-                            'source_filename_format':'%Y%m%d%H*',
-                            'class_path':
-                                'swift.stats.access_processor.AccessLogProcessor'
+                    'log-processor-access': {
+                        'source_filename_format': '%Y%m%d%H*',
+                        'class_path':
+                            'swift.stats.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(access_proxy_config, DumbLogger())
+
         def get_object_data(*a, **kw):
             return [self.access_test_line]
         p.get_object_data = get_object_data
@@ -177,10 +182,10 @@ use = egg:swift#proxy
     def test_process_one_access_file_error(self):
         access_proxy_config = self.proxy_config.copy()
         access_proxy_config.update({
-                        'log-processor-access': {
-                            'source_filename_format':'%Y%m%d%H*',
-                            'class_path':
-                                'swift.stats.access_processor.AccessLogProcessor'
+                    'log-processor-access': {
+                        'source_filename_format': '%Y%m%d%H*',
+                        'class_path':
+                            'swift.stats.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(access_proxy_config, DumbLogger())
         p._internal_proxy = DumbInternalProxy(code=500)
@@ -216,7 +221,7 @@ use = egg:swift#proxy
         p = log_processor.LogProcessor(self.proxy_config, DumbLogger())
         p._internal_proxy = DumbInternalProxy()
         result = list(p.get_object_data('a', 'c', 'o', False))
-        expected = ['obj','data']
+        expected = ['obj', 'data']
         self.assertEquals(result, expected)
         result = list(p.get_object_data('a', 'c', 'o.gz', True))
         self.assertEquals(result, expected)
@@ -242,7 +247,8 @@ use = egg:swift#proxy
                         }})
         p = log_processor.LogProcessor(stats_proxy_config, DumbLogger())
         p._internal_proxy = DumbInternalProxy()
-        def get_object_data(*a,**kw):
+
+        def get_object_data(*a, **kw):
             return [self.stats_test_line]
         p.get_object_data = get_object_data
         result = p.process_one_file('stats', 'a', 'c', 'y/m/d/h/o')
@@ -263,6 +269,7 @@ use = egg:swift#proxy
         class Plugin1(object):
             def keylist_mapping(self):
                 return {'a': 'b', 'c': 'd', 'e': ['f', 'g']}
+
         class Plugin2(object):
             def keylist_mapping(self):
                 return {'a': '1', 'e': '2', 'h': '3'}
@@ -277,10 +284,10 @@ use = egg:swift#proxy
     def test_access_keylist_mapping_format(self):
         proxy_config = self.proxy_config.copy()
         proxy_config.update({
-                        'log-processor-access': {
-                            'source_filename_format':'%Y%m%d%H*',
-                            'class_path':
-                                'swift.stats.access_processor.AccessLogProcessor'
+                    'log-processor-access': {
+                        'source_filename_format': '%Y%m%d%H*',
+                        'class_path':
+                            'swift.stats.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(proxy_config, DumbLogger())
         mapping = p.generate_keylist_mapping()
@@ -306,21 +313,22 @@ use = egg:swift#proxy
     def test_collate_worker(self):
         try:
             log_processor.LogProcessor._internal_proxy = DumbInternalProxy()
-            def get_object_data(*a,**kw):
+
+            def get_object_data(*a, **kw):
                 return [self.access_test_line]
             orig_get_object_data = log_processor.LogProcessor.get_object_data
             log_processor.LogProcessor.get_object_data = get_object_data
             proxy_config = self.proxy_config.copy()
             proxy_config.update({
                     'log-processor-access': {
-                        'source_filename_format':'%Y%m%d%H*',
+                        'source_filename_format': '%Y%m%d%H*',
                         'class_path':
                             'swift.stats.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
             q_in = Queue.Queue()
             q_out = Queue.Queue()
-            work_request = ('access', 'a','c','o')
+            work_request = ('access', 'a', 'c', 'o')
             q_in.put(work_request)
             q_in.put(None)
             log_processor.collate_worker(processor_args, q_in, q_out)
@@ -341,7 +349,7 @@ use = egg:swift#proxy
             log_processor.LogProcessor.get_object_data = orig_get_object_data
 
     def test_collate_worker_error(self):
-        def get_object_data(*a,**kw):
+        def get_object_data(*a, **kw):
             raise Exception()
         orig_get_object_data = log_processor.LogProcessor.get_object_data
         try:
@@ -349,14 +357,14 @@ use = egg:swift#proxy
             proxy_config = self.proxy_config.copy()
             proxy_config.update({
                     'log-processor-access': {
-                        'source_filename_format':'%Y%m%d%H*',
+                        'source_filename_format': '%Y%m%d%H*',
                         'class_path':
                             'swift.stats.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
             q_in = Queue.Queue()
             q_out = Queue.Queue()
-            work_request = ('access', 'a','c','o')
+            work_request = ('access', 'a', 'c', 'o')
             q_in.put(work_request)
             q_in.put(None)
             log_processor.collate_worker(processor_args, q_in, q_out)
@@ -371,19 +379,20 @@ use = egg:swift#proxy
     def test_multiprocess_collate(self):
         try:
             log_processor.LogProcessor._internal_proxy = DumbInternalProxy()
-            def get_object_data(*a,**kw):
+
+            def get_object_data(*a, **kw):
                 return [self.access_test_line]
             orig_get_object_data = log_processor.LogProcessor.get_object_data
             log_processor.LogProcessor.get_object_data = get_object_data
             proxy_config = self.proxy_config.copy()
             proxy_config.update({
                     'log-processor-access': {
-                        'source_filename_format':'%Y%m%d%H*',
+                        'source_filename_format': '%Y%m%d%H*',
                         'class_path':
                             'swift.stats.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
-            item = ('access', 'a','c','o')
+            item = ('access', 'a', 'c', 'o')
             logs_to_process = [item]
             results = log_processor.multiprocess_collate(processor_args,
                                                          logs_to_process,
@@ -404,7 +413,7 @@ use = egg:swift#proxy
             log_processor.LogProcessor.get_object_data = orig_get_object_data
 
     def test_multiprocess_collate_errors(self):
-        def get_object_data(*a,**kw):
+        def get_object_data(*a, **kw):
             raise log_processor.BadFileDownload()
         orig_get_object_data = log_processor.LogProcessor.get_object_data
         try:
@@ -412,12 +421,12 @@ use = egg:swift#proxy
             proxy_config = self.proxy_config.copy()
             proxy_config.update({
                     'log-processor-access': {
-                        'source_filename_format':'%Y%m%d%H*',
+                        'source_filename_format': '%Y%m%d%H*',
                         'class_path':
                             'swift.stats.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
-            item = ('access', 'a','c','o')
+            item = ('access', 'a', 'c', 'o')
             logs_to_process = [item]
             results = log_processor.multiprocess_collate(processor_args,
                                                          logs_to_process,
@@ -428,6 +437,7 @@ use = egg:swift#proxy
         finally:
             log_processor.LogProcessor._internal_proxy = None
             log_processor.LogProcessor.get_object_data = orig_get_object_data
+
 
 class TestLogProcessorDaemon(unittest.TestCase):
 
@@ -441,12 +451,13 @@ class TestLogProcessorDaemon(unittest.TestCase):
             d = datetime.datetime
 
             for x in [
-                    [d(2011, 1, 1), 0, 0, None, None],
-                    [d(2011, 1, 1), 120, 0, '2010122700', None],
-                    [d(2011, 1, 1), 120, 24, '2010122700', '2010122800'],
-                    [d(2010, 1, 2, 3, 4), 120, 48, '2009122803', '2009123003'],
-                    [d(2009, 5, 6, 7, 8), 1200, 100, '2009031707', '2009032111'],
-                    [d(2008, 9, 10, 11, 12), 3000, 1000, '2008050811', '2008061903'],
+                [d(2011, 1, 1), 0, 0, None, None],
+                [d(2011, 1, 1), 120, 0, '2010122700', None],
+                [d(2011, 1, 1), 120, 24, '2010122700', '2010122800'],
+                [d(2010, 1, 2, 3, 4), 120, 48, '2009122803', '2009123003'],
+                [d(2009, 5, 6, 7, 8), 1200, 100, '2009031707', '2009032111'],
+                [d(2008, 9, 10, 11, 12), 3000, 1000, '2008050811',
+                    '2008061903'],
                 ]:
 
                 log_processor.now = lambda: x[0]
@@ -547,13 +558,13 @@ class TestLogProcessorDaemon(unittest.TestCase):
         class MockLogProcessorDaemon(log_processor.LogProcessorDaemon):
             def __init__(self):
                 self._keylist_mapping = {
-                    'out_field1':['field1', 'field2', 'field3'],
-                    'out_field2':['field2', 'field3'],
-                    'out_field3':['field3'],
-                    'out_field4':'field4',
-                    'out_field5':['field6', 'field7', 'field8'],
-                    'out_field6':['field6'],
-                    'out_field7':'field7',
+                    'out_field1': ['field1', 'field2', 'field3'],
+                    'out_field2': ['field2', 'field3'],
+                    'out_field3': ['field3'],
+                    'out_field4': 'field4',
+                    'out_field5': ['field6', 'field7', 'field8'],
+                    'out_field6': ['field6'],
+                    'out_field7': 'field7',
                 }
 
         data_in = {
@@ -567,16 +578,16 @@ class TestLogProcessorDaemon(unittest.TestCase):
         expected_data_out = {
             'acct1_time1': {'out_field1': 16, 'out_field2': 5,
                 'out_field3': 3, 'out_field4': 8, 'out_field5': 0,
-                'out_field6': 0, 'out_field7': 0,},
+                'out_field6': 0, 'out_field7': 0, },
             'acct1_time2': {'out_field1': 9, 'out_field2': 5,
                 'out_field3': 0, 'out_field4': 0, 'out_field5': 0,
-                'out_field6': 0, 'out_field7': 0,},
+                'out_field6': 0, 'out_field7': 0, },
             'acct2_time1': {'out_field1': 13, 'out_field2': 7,
                 'out_field3': 0, 'out_field4': 0, 'out_field5': 0,
-                'out_field6': 0, 'out_field7': 0,},
+                'out_field6': 0, 'out_field7': 0, },
             'acct3_time3': {'out_field1': 17, 'out_field2': 9,
                 'out_field3': 0, 'out_field4': 0, 'out_field5': 0,
-                'out_field6': 0, 'out_field7': 0,},
+                'out_field6': 0, 'out_field7': 0, },
         }
 
         self.assertEquals(expected_data_out,
@@ -619,13 +630,13 @@ class TestLogProcessorDaemon(unittest.TestCase):
     def test_get_output(self):
         class MockLogProcessorDaemon(log_processor.LogProcessorDaemon):
             def __init__(self):
-                self._keylist_mapping = {'a':None, 'b':None, 'c':None}
+                self._keylist_mapping = {'a': None, 'b': None, 'c': None}
 
         data_in = {
-            ('acct1', 2010, 1, 1, 0): {'a':1, 'b':2, 'c':3},
-            ('acct1', 2010, 10, 10, 10): {'a':10, 'b':20, 'c':30},
-            ('acct2', 2008, 3, 6, 9): {'a':8, 'b':9, 'c':12},
-            ('acct3', 2005, 4, 8, 16): {'a':1, 'b':5, 'c':25},
+            ('acct1', 2010, 1, 1, 0): {'a': 1, 'b': 2, 'c': 3},
+            ('acct1', 2010, 10, 10, 10): {'a': 10, 'b': 20, 'c': 30},
+            ('acct2', 2008, 3, 6, 9): {'a': 8, 'b': 9, 'c': 12},
+            ('acct3', 2005, 4, 8, 16): {'a': 1, 'b': 5, 'c': 25},
         }
 
         expected_data_out = [
@@ -649,6 +660,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
         try:
             real_strftime = time.strftime
             mock_strftime_return = '2010/03/02/01/'
+
             def mock_strftime(format):
                 self.assertEquals('%Y/%m/%d/%H/', format)
                 return mock_strftime_return
@@ -708,6 +720,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
         # tested elsewhere.
 
         value_return = 'keylist_mapping'
+
         class MockLogProcessor:
             def __init__(self):
                 self.call_count = 0
@@ -746,12 +759,15 @@ class TestLogProcessorDaemon(unittest.TestCase):
                     self.worker_count = 'worker_count'
 
                 def get_aggregate_data(self, processed_files, results):
-                    self.test.assertEquals(mock_processed_files, processed_files)
-                    self.test.assertEquals(multiprocess_collate_return, results)
+                    self.test.assertEquals(mock_processed_files,
+                        processed_files)
+                    self.test.assertEquals(multiprocess_collate_return,
+                        results)
                     return get_aggregate_data_return
 
                 def get_final_info(self, aggr_data):
-                    self.test.assertEquals(get_aggregate_data_return, aggr_data)
+                    self.test.assertEquals(get_aggregate_data_return,
+                        aggr_data)
                     return get_final_info_return
 
                 def get_output(self, final_info):

@@ -20,7 +20,8 @@ import webob
 import tempfile
 import json
 
-from swift.common import internal_proxy
+from slogging import internal_proxy
+
 
 class DumbBaseApplicationFactory(object):
 
@@ -37,6 +38,7 @@ class DumbBaseApplicationFactory(object):
             app.default_status_code = 200
         app.body = self.body
         return app
+
 
 class DumbBaseApplication(object):
 

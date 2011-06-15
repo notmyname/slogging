@@ -22,7 +22,7 @@ import re
 import sys
 from paste.deploy import appconfig
 
-from swift.common.internal_proxy import InternalProxy
+from slogging.internal_proxy import InternalProxy
 from swift.common.daemon import Daemon
 from swift.common import utils
 

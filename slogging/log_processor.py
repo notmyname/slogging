@@ -25,7 +25,7 @@ import Queue
 import cPickle
 import hashlib
 
-from swift.common.internal_proxy import InternalProxy
+from sloging.internal_proxy import InternalProxy
 from swift.common.exceptions import ChunkReadTimeout
 from swift.common.utils import get_logger, readconf, TRUE_VALUES
 from swift.common.daemon import Daemon

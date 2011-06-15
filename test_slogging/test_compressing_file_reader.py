@@ -18,7 +18,8 @@
 import unittest
 import cStringIO
 
-from swift.common.compressing_file_reader import CompressingFileReader
+from slogging.compressing_file_reader import CompressingFileReader
+
 
 class TestCompressingFileReader(unittest.TestCase):
 

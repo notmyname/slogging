@@ -17,7 +17,7 @@ import webob
 from urllib import quote, unquote
 from json import loads as json_loads
 
-from swift.common.compressing_file_reader import CompressingFileReader
+from slogging.compressing_file_reader import CompressingFileReader
 from swift.proxy.server import BaseApplication
 
 
