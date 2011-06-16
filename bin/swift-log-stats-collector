@@ -16,7 +16,7 @@
 
 from optparse import OptionParser
 
-from swift.stats.log_processor import LogProcessorDaemon
+from slogging.log_processor import LogProcessorDaemon
 from swift.common.utils import parse_options
 from swift.common.daemon import run_daemon
 

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from swift.stats.db_stats_collector import AccountStatsCollector
+from slogging.db_stats_collector import AccountStatsCollector
 from swift.common.utils import parse_options
 from swift.common.daemon import run_daemon
 

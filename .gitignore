@@ -1,0 +1,5 @@
+slogging.egg-info/
+*.py[co]
+doc/build/*
+dist
+.coverage

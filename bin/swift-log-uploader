@@ -16,7 +16,7 @@
 
 import sys
 from optparse import OptionParser
-from swift.stats.log_uploader import LogUploader
+from slogging.log_uploader import LogUploader
 from swift.common.utils import parse_options
 from swift.common import utils
 
