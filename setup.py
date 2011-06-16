@@ -15,30 +15,11 @@
 # limitations under the License.
 
 from setuptools import setup, find_packages
-from setuptools.command.sdist import sdist
-import os
-import subprocess
-try:
-    from babel.messages import frontend
-except ImportError:
-    frontend = None
 
 from slogging import __version__ as version
 
 
 name = 'slogging'
-
-
-cmdclass = {'sdist': local_sdist}
-
-
-if frontend:
-    cmdclass.update({
-        'compile_catalog': frontend.compile_catalog,
-        'extract_messages': frontend.extract_messages,
-        'init_catalog': frontend.init_catalog,
-        'update_catalog': frontend.update_catalog,
-    })
 
 
 setup(
@@ -51,7 +32,6 @@ setup(
     url='https://github.com/notmyname/slogging',
     packages=find_packages(exclude=['test_slogging', 'bin']),
     test_suite='nose.collector',
-    cmdclass=cmdclass,
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
