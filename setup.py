@@ -40,6 +40,7 @@ setup(
         'Environment :: No Input/Output (Daemon)',
         ],
     install_requires=[],  # removed for better compat
-    scripts=[
+    scripts=['bin/swift-account-stats-logger', 'swift-container-stats-logger',
+             'bin/swift-log-stats-collector', 'bin/swift-log-uploader'
         ],
     )
