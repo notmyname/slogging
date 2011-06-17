@@ -83,9 +83,9 @@ The resulting csv file has one line per (account, year, month, day, hour) for
 all log files processed in that run of swift-log-stats-collector.
 
 
-================================
+--------------------------------
 Running the stats system on SAIO
-================================
+--------------------------------
 
 #. Create a swift account to use for storing stats information, and note the
    account hash. The hash will be used in config files.
