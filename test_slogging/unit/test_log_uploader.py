@@ -24,7 +24,7 @@ import random
 import string
 
 from test.unit import temptree
-from swift.stats import log_uploader
+from slogging import log_uploader
 
 import logging
 logging.basicConfig(level=logging.DEBUG)

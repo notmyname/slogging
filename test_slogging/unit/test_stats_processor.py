@@ -16,7 +16,7 @@
 # TODO: Tests
 
 import unittest
-from swift.stats import stats_processor
+from slogging import stats_processor
 
 
 class TestStatsProcessor(unittest.TestCase):

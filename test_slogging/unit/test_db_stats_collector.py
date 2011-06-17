@@ -19,7 +19,7 @@ import os
 import time
 import uuid
 from shutil import rmtree
-from swift.stats import db_stats_collector
+from slogging import db_stats_collector
 from tempfile import mkdtemp
 from test.unit import FakeLogger
 from swift.common.db import AccountBroker, ContainerBroker

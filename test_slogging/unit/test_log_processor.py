@@ -22,7 +22,7 @@ import pickle
 import time
 
 from slogging import internal_proxy
-from swift.stats import log_processor
+from slogging import log_processor
 from swift.common.exceptions import ChunkReadTimeout
 
 
@@ -122,7 +122,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(access_proxy_config, DumbLogger())
         result = p.plugins['access']['instance'].log_line_parser(
@@ -160,7 +160,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(access_proxy_config, DumbLogger())
 
@@ -185,7 +185,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(access_proxy_config, DumbLogger())
         p._internal_proxy = DumbInternalProxy(code=500)
@@ -243,7 +243,7 @@ use = egg:swift#proxy
         stats_proxy_config.update({
                         'log-processor-stats': {
                             'class_path':
-                                'swift.stats.stats_processor.StatsLogProcessor'
+                                'slogging.stats_processor.StatsLogProcessor'
                         }})
         p = log_processor.LogProcessor(stats_proxy_config, DumbLogger())
         p._internal_proxy = DumbInternalProxy()
@@ -287,7 +287,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                         }})
         p = log_processor.LogProcessor(proxy_config, DumbLogger())
         mapping = p.generate_keylist_mapping()
@@ -301,7 +301,7 @@ use = egg:swift#proxy
         proxy_config.update({
                         'log-processor-stats': {
                             'class_path':
-                                'swift.stats.stats_processor.StatsLogProcessor'
+                                'slogging.stats_processor.StatsLogProcessor'
                         }})
         p = log_processor.LogProcessor(proxy_config, DumbLogger())
         mapping = p.generate_keylist_mapping()
@@ -323,7 +323,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
             q_in = Queue.Queue()
@@ -359,7 +359,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
             q_in = Queue.Queue()
@@ -389,7 +389,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
             item = ('access', 'a', 'c', 'o')
@@ -423,7 +423,7 @@ use = egg:swift#proxy
                     'log-processor-access': {
                         'source_filename_format': '%Y%m%d%H*',
                         'class_path':
-                            'swift.stats.access_processor.AccessLogProcessor'
+                            'slogging.access_processor.AccessLogProcessor'
                     }})
             processor_args = (proxy_config, DumbLogger())
             item = ('access', 'a', 'c', 'o')

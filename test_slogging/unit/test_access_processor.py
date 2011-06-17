@@ -16,7 +16,7 @@
 # TODO: Tests
 
 import unittest
-from swift.stats import access_processor
+from slogging import access_processor
 
 
 class TestAccessProcessor(unittest.TestCase):
