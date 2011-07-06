@@ -122,6 +122,8 @@ class AccountStatsCollector(DatabaseStatsCollector):
         """
         Data for generated csv has the following columns:
         Account Hash, Container Count, Object Count, Bytes Used
+
+        :raises sqlite3.Error: does not catch errors connecting to db
         """
         line_data = None
         broker = AccountBroker(db_path)
@@ -166,6 +168,8 @@ class ContainerStatsCollector(DatabaseStatsCollector):
         Account Hash, Container Name, Object Count, Bytes Used
         This will just collect whether or not the metadata is set
         using a 1 or ''.
+
+        :raises sqlite3.Error: does not catch errors connecting to db
         """
         line_data = None
         broker = ContainerBroker(db_path)
