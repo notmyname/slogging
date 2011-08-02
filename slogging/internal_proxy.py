@@ -55,10 +55,10 @@ def make_request_body_file(source_file, compress=True):
 
 def webob_request_copy(orig_req, source_file=None, compress=True):
     req_copy = orig_req.copy()
+    req_copy.headers = dict(orig_req.headers)
     if source_file:
         req_copy.body_file = make_request_body_file(source_file,
                                                     compress=compress)
-    req_copy.content_length = orig_req.content_length
     return req_copy
 
 

@@ -78,6 +78,8 @@ class TestInternalProxy(unittest.TestCase):
         self.assertEquals(req.path, req2.path)
         self.assertEquals(req.path_info, req2.path_info)
         self.assertFalse(req is req2)
+        self.assertEquals(req.headers, req2.headers)
+        self.assertFalse(req.headers is req2.headers)
 
     def test_handle_request(self):
         status_codes = [200]
