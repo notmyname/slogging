@@ -34,15 +34,15 @@ class StatsLogProcessor(object):
                 (account,
                 container_count,
                 object_count,
-                bytes_used) = line.split(',')
+                bytes_used) = line.split(',')[:4]
+                account = account.strip('"')
+                container_count = int(container_count.strip('"'))
+                object_count = int(object_count.strip('"'))
+                bytes_used = int(bytes_used.strip('"'))
             except (IndexError, ValueError):
                 # bad line data
                 self.logger.debug(_('Bad line data: %s') % repr(line))
                 continue
-            account = account.strip('"')
-            container_count = int(container_count.strip('"'))
-            object_count = int(object_count.strip('"'))
-            bytes_used = int(bytes_used.strip('"'))
             aggr_key = (account, year, month, day, hour)
             d = account_totals.get(aggr_key, {})
             d['replica_count'] = d.setdefault('replica_count', 0) + 1
