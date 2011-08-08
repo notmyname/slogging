@@ -61,7 +61,7 @@ def memoize(func):
         len_cache = len(cache)
         if len_cache > MEMOIZE_KEY_LIMIT:
             cache_keys = cache.keys()
-            for _unused in xrange(len_cache * MEMOIZE_FLUSH_RATE):
+            for _unused in xrange(int(len_cache * MEMOIZE_FLUSH_RATE)):
                 index_to_delete = random.randrange(0, len(cache_keys))
                 key_to_delete = cache_keys.pop(index_to_delete)
                 del cache[key_to_delete]
