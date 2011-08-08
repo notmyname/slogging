@@ -30,7 +30,7 @@ class TestAccessProcessor(unittest.TestCase):
         for param in access_processor.LISTING_PARAMS:
             query += '&%s=blah' % param
         log_line[6] = '/v1/a/c/o?%s' % query
-        log_line = 'x'*16 + ' '.join(log_line)
+        log_line = 'x' * 16 + ' '.join(log_line)
         res = p.log_line_parser(log_line)
         expected = {'code': 8, 'processing_time': '17', 'auth_token': '11',
                     'month': '01', 'second': '6', 'year': '3', 'tz': '+0000',
@@ -44,7 +44,7 @@ class TestAccessProcessor(unittest.TestCase):
             expected[param] = 1
         expected['query'] = query
         self.assertEquals(res, expected)
-        
+
     def test_log_line_parser_field_count(self):
         p = access_processor.AccessLogProcessor({})
         # too few fields
@@ -52,7 +52,7 @@ class TestAccessProcessor(unittest.TestCase):
         log_line[1] = 'proxy-server'
         log_line[4] = '1/Jan/3/4/5/6'
         log_line[6] = '/v1/a/c/o'
-        log_line = 'x'*16 + ' '.join(log_line)
+        log_line = 'x' * 16 + ' '.join(log_line)
         res = p.log_line_parser(log_line)
         expected = {}
         self.assertEquals(res, expected)
@@ -61,7 +61,7 @@ class TestAccessProcessor(unittest.TestCase):
         log_line[1] = 'proxy-server'
         log_line[4] = '1/Jan/3/4/5/6'
         log_line[6] = '/v1/a/c/o'
-        log_line = 'x'*16 + ' '.join(log_line)
+        log_line = 'x' * 16 + ' '.join(log_line)
         res = p.log_line_parser(log_line)
         expected = {'code': 8, 'processing_time': '17', 'auth_token': '11',
                     'month': '01', 'second': '6', 'year': '3', 'tz': '+0000',
@@ -77,7 +77,7 @@ class TestAccessProcessor(unittest.TestCase):
         log_line[1] = 'proxy-server'
         log_line[4] = '1/Jan/3/4/5/6'
         log_line[6] = '/v1/a/c/o'
-        log_line = 'x'*16 + ' '.join(log_line)
+        log_line = 'x' * 16 + ' '.join(log_line)
         res = p.log_line_parser(log_line)
         expected = {'code': 8, 'processing_time': '17', 'auth_token': '11',
                     'month': '01', 'second': '6', 'year': '3', 'tz': '+0000',

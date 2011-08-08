@@ -26,30 +26,19 @@ import cPickle
 import hashlib
 
 from slogging.internal_proxy import InternalProxy
-from swift.common.exceptions import ChunkReadTimeout
-from swift.common.utils import get_logger, readconf, TRUE_VALUES
+from swift.common.utils import get_logger, readconf
 from swift.common.daemon import Daemon
+from slogging.log_common import LogProcessorCommon, multiprocess_collate, \
+                                   BadFileDownload
 
 now = datetime.datetime.now
 
 
-class BadFileDownload(Exception):
-
-    def __init__(self, status_code=None):
-        self.status_code = status_code
-
-
-class LogProcessor(object):
+class LogProcessor(LogProcessorCommon):
     """Load plugins, process logs"""
 
     def __init__(self, conf, logger):
-        if isinstance(logger, tuple):
-            self.logger = get_logger(*logger, log_route='log-processor')
-        else:
-            self.logger = logger
-
-        self.conf = conf
-        self._internal_proxy = None
+        super(LogProcessor, self).__init__(conf, logger, 'log-processor')
 
         # load the processing plugins
         self.plugins = {}
@@ -57,9 +46,6 @@ class LogProcessor(object):
         for section in (x for x in conf if x.startswith(plugin_prefix)):
             plugin_name = section[len(plugin_prefix):]
             plugin_conf = conf.get(section, {})
-            if plugin_conf.get('processable', 'true').lower() not in \
-                    TRUE_VALUES:
-                continue
             self.plugins[plugin_name] = plugin_conf
             class_path = self.plugins[plugin_name]['class_path']
             import_target, class_name = class_path.rsplit('.', 1)
@@ -67,20 +53,6 @@ class LogProcessor(object):
             klass = getattr(module, class_name)
             self.plugins[plugin_name]['instance'] = klass(plugin_conf)
             self.logger.debug(_('Loaded plugin "%s"') % plugin_name)
-
-    @property
-    def internal_proxy(self):
-        if self._internal_proxy is None:
-            stats_conf = self.conf.get('log-processor', {})
-            proxy_server_conf_loc = stats_conf.get('proxy_server_conf',
-                                            '/etc/swift/proxy-server.conf')
-            proxy_server_conf = appconfig(
-                                        'config:%s' % proxy_server_conf_loc,
-                                        name='proxy-server')
-            self._internal_proxy = InternalProxy(proxy_server_conf,
-                                                 self.logger,
-                                                 retries=3)
-        return self._internal_proxy
 
     def process_one_file(self, plugin_name, account, container, object_name):
         self.logger.info(_('Processing %(obj)s with plugin "%(plugin)s"') %
@@ -113,87 +85,6 @@ class LogProcessor(object):
                 if x not in listing_filter:
                     total_list.append(x)
         return total_list
-
-    def get_container_listing(self, swift_account, container_name,
-                              start_date=None, end_date=None,
-                              listing_filter=None):
-        '''
-        Get a container listing, filtered by start_date, end_date, and
-        listing_filter. Dates, if given, must be in YYYYMMDDHH format
-        '''
-        search_key = None
-        if start_date is not None:
-            try:
-                parsed_date = time.strptime(start_date, '%Y%m%d%H')
-            except ValueError:
-                pass
-            else:
-                year = '%04d' % parsed_date.tm_year
-                month = '%02d' % parsed_date.tm_mon
-                day = '%02d' % parsed_date.tm_mday
-                hour = '%02d' % parsed_date.tm_hour
-                search_key = '/'.join([year, month, day, hour])
-        end_key = None
-        if end_date is not None:
-            try:
-                parsed_date = time.strptime(end_date, '%Y%m%d%H')
-            except ValueError:
-                pass
-            else:
-                year = '%04d' % parsed_date.tm_year
-                month = '%02d' % parsed_date.tm_mon
-                day = '%02d' % parsed_date.tm_mday
-                # Since the end_marker filters by <, we need to add something
-                # to make sure we get all the data under the last hour. Adding
-                # one to the hour should be all-inclusive.
-                hour = '%02d' % (parsed_date.tm_hour + 1)
-                end_key = '/'.join([year, month, day, hour])
-        container_listing = self.internal_proxy.get_container_list(
-                                    swift_account,
-                                    container_name,
-                                    marker=search_key,
-                                    end_marker=end_key)
-        results = []
-        if listing_filter is None:
-            listing_filter = set()
-        for item in container_listing:
-            name = item['name']
-            if name not in listing_filter:
-                results.append(name)
-        return results
-
-    def get_object_data(self, swift_account, container_name, object_name,
-                        compressed=False):
-        '''reads an object and yields its lines'''
-        code, o = self.internal_proxy.get_object(swift_account, container_name,
-                                                 object_name)
-        if code < 200 or code >= 300:
-            raise BadFileDownload(code)
-        last_part = ''
-        last_compressed_part = ''
-        # magic in the following zlib.decompressobj argument is courtesy of
-        # Python decompressing gzip chunk-by-chunk
-        # http://stackoverflow.com/questions/2423866
-        d = zlib.decompressobj(16 + zlib.MAX_WBITS)
-        try:
-            for chunk in o:
-                if compressed:
-                    try:
-                        chunk = d.decompress(chunk)
-                    except zlib.error:
-                        self.logger.debug(_('Bad compressed data for %s')
-                            % '/'.join((swift_account, container_name,
-                                        object_name)))
-                        raise BadFileDownload()  # bad compressed data
-                parts = chunk.split('\n')
-                parts[0] = last_part + parts[0]
-                for part in parts[:-1]:
-                    yield part
-                last_part = parts[-1]
-            if last_part:
-                yield last_part
-        except ChunkReadTimeout:
-            raise BadFileDownload()
 
     def generate_keylist_mapping(self):
         keylist = {}
@@ -471,8 +362,9 @@ class LogProcessorDaemon(Daemon):
 
         # map
         processor_args = (self.total_conf, self.logger)
-        results = multiprocess_collate(processor_args, logs_to_process,
-            self.worker_count)
+        results = multiprocess_collate(LogProcessor, processor_args,
+                                       'process_one_file', logs_to_process,
+                                       self.worker_count)
 
         # reduce
         aggr_data = self.get_aggregate_data(processed_files, results)
@@ -529,53 +421,3 @@ class LogProcessorDaemon(Daemon):
 
         self.logger.info(_("Log processing done (%0.2f minutes)") %
             ((time.time() - start) / 60))
-
-
-def multiprocess_collate(processor_args, logs_to_process, worker_count):
-    '''
-    yield hourly data from logs_to_process
-    Every item that this function yields will be added to the processed files
-    list.
-    '''
-    results = []
-    in_queue = multiprocessing.Queue()
-    out_queue = multiprocessing.Queue()
-    for _junk in range(worker_count):
-        p = multiprocessing.Process(target=collate_worker,
-                                    args=(processor_args,
-                                          in_queue,
-                                          out_queue))
-        p.start()
-        results.append(p)
-    for x in logs_to_process:
-        in_queue.put(x)
-    for _junk in range(worker_count):
-        in_queue.put(None)  # tell the worker to end
-    while True:
-        try:
-            item, data = out_queue.get_nowait()
-        except Queue.Empty:
-            time.sleep(.01)
-        else:
-            if not isinstance(data, Exception):
-                yield item, data
-        if not any(r.is_alive() for r in results) and out_queue.empty():
-            # all the workers are done and nothing is in the queue
-            break
-
-
-def collate_worker(processor_args, in_queue, out_queue):
-    '''worker process for multiprocess_collate'''
-    p = LogProcessor(*processor_args)
-    while True:
-        item = in_queue.get()
-        if item is None:
-            # no more work to process
-            break
-        try:
-            ret = p.process_one_file(*item)
-        except Exception, err:
-            item_string = '/'.join(item[1:])
-            p.logger.exception("Unable to process file '%s'" % (item_string))
-            ret = err
-        out_queue.put((item, ret))

@@ -16,6 +16,7 @@
 import webob
 from urllib import quote, unquote
 from json import loads as json_loads
+import copy
 
 from slogging.compressing_file_reader import CompressingFileReader
 from swift.proxy.server import BaseApplication
@@ -208,3 +209,13 @@ class InternalProxy(object):
         if resp.status_int == 204:
             return []
         return json_loads(resp.body)
+
+    def get_container_metadata(self, account, container):
+        path = '/v1/%s/%s/' % (account, container)
+        req = webob.Request.blank(path, environ={'REQUEST_METHOD': 'HEAD'})
+        resp = self._handle_request(req)
+        out = {}
+        for k, v in resp.headers.iteritems():
+            if k.lower().startswith('x-container-meta-'):
+                out[k] = v
+        return out
