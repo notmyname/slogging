@@ -18,6 +18,7 @@ import unittest
 import os
 import time
 import uuid
+import sqlite3
 from shutil import rmtree
 from slogging import db_stats_collector
 from tempfile import mkdtemp
@@ -162,6 +163,15 @@ class TestDbStats(unittest.TestCase):
                 output_data.discard(data.strip())
 
         self.assertEqual(len(output_data), 0)
+
+    def test_account_stat_run_once_bad_db(self):
+        stat, output_data = self._gen_account_stat()
+
+        def raise_error(path):
+            raise sqlite3.OperationalError('Test error')
+        stat.get_data = raise_error
+        was_errors = len(stat.logger.log_dict['info'])
+        stat.run_once()
 
     def test_account_stat_run_once_container_metadata(self):
 

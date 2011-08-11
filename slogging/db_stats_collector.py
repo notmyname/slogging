@@ -19,6 +19,7 @@ from paste.deploy import appconfig
 import shutil
 import hashlib
 import urllib
+import sqlite3
 
 from swift.account.server import DATADIR as account_server_data_dir
 from swift.container.server import DATADIR as container_server_data_dir
@@ -89,7 +90,13 @@ class DatabaseStatsCollector(Daemon):
                         for filename in files:
                             if filename.endswith('.db'):
                                 db_path = os.path.join(root, filename)
-                                line_data = self.get_data(db_path)
+                                try:
+                                    line_data = self.get_data(db_path)
+                                except sqlite3.Error, err:
+                                    self.logger.info(
+                                        _("Error accessing db %s: %s") %
+                                          (db_path, err))
+                                    continue
                                 if line_data:
                                     statfile.write(line_data)
                                     hasher.update(line_data)
@@ -115,6 +122,8 @@ class AccountStatsCollector(DatabaseStatsCollector):
         """
         Data for generated csv has the following columns:
         Account Hash, Container Count, Object Count, Bytes Used
+
+        :raises sqlite3.Error: does not catch errors connecting to db
         """
         line_data = None
         broker = AccountBroker(db_path)
@@ -159,6 +168,8 @@ class ContainerStatsCollector(DatabaseStatsCollector):
         Account Hash, Container Name, Object Count, Bytes Used
         This will just collect whether or not the metadata is set
         using a 1 or ''.
+
+        :raises sqlite3.Error: does not catch errors connecting to db
         """
         line_data = None
         broker = ContainerBroker(db_path)
