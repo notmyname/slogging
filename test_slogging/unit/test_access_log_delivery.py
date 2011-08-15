@@ -157,6 +157,9 @@ class TestAccessLogDelivery(unittest.TestCase):
         def my_get_metadata_true(*a, **kw):
             return {p.metadata_key: 'yes'}
 
+        def my_get_metadata_true_upper(*a, **kw):
+            return {p.metadata_key: 'YES'}
+
         def my_get_metadata_false(*a, **kw):
             return {p.metadata_key: 'no'}
         p.internal_proxy.get_container_metadata = my_get_metadata_false
@@ -165,6 +168,11 @@ class TestAccessLogDelivery(unittest.TestCase):
         expected = False
         self.assertEquals(res, expected)
         p.internal_proxy.get_container_metadata = my_get_metadata_true
+        p.memcache = FakeMemcache()
+        res = p.get_container_save_log_flag('a', 'c2')
+        expected = True
+        self.assertEquals(res, expected)
+        p.internal_proxy.get_container_metadata = my_get_metadata_true_upper
         p.memcache = FakeMemcache()
         res = p.get_container_save_log_flag('a', 'c2')
         expected = True
