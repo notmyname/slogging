@@ -156,7 +156,7 @@ class AccessLogDelivery(LogProcessorCommon):
             metadata = self.internal_proxy.get_container_metadata(account,
                                                                   container)
             val = metadata.get(self.metadata_key)
-            flag = val in TRUE_VALUES
+            flag = val.lower() in TRUE_VALUES
             self.memcache.set(key, flag, timeout=self.frequency)
         return flag
 
