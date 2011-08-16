@@ -113,6 +113,17 @@ use = egg:swift#proxy
             self.assert_(isinstance(p.internal_proxy,
                                     log_processor.InternalProxy))
             self.assertEquals(p.internal_proxy, p._internal_proxy)
+        # test with empty config variable
+        conf = {'log-processor': {
+                'proxy_server_conf': '',
+            }
+        }
+        q = log_processor.LogProcessor(conf, DumbLogger())
+        self.assert_(isinstance(q._internal_proxy,
+                                None.__class__))
+        self.assert_(isinstance(q.internal_proxy,
+                                log_processor.InternalProxy))
+        self.assertEquals(q.internal_proxy, q._internal_proxy)
 
         # reset FakeUploadApp
         reload(internal_proxy)
