@@ -174,7 +174,7 @@ class TestAccessLogDelivery(unittest.TestCase):
         self.assertEquals(res, expected)
         p.internal_proxy.get_container_metadata = my_get_metadata_true_upper
         p.memcache = FakeMemcache()
-        res = p.get_container_save_log_flag('a', 'c2')
+        res = p.get_container_save_log_flag('a', 'c3')
         expected = True
         self.assertEquals(res, expected)
 
