@@ -51,11 +51,14 @@ class LogProcessorCommon(object):
     @property
     def internal_proxy(self):
         if self._internal_proxy is None:
-            stats_conf = self.conf.get('log-processor', {})
-            proxy_server_conf_loc = stats_conf.get('proxy_server_conf',
-                                            '/etc/swift/proxy-server.conf')
-            proxy_server_conf = appconfig(
-                                        'config:%s' % proxy_server_conf_loc,
+            # first look in the conf directly
+            proxy_server_conf_loc = self.conf.get('proxy_server_conf')
+            if not proxy_server_conf_loc:
+                # then look in a section called log-processor
+                stats_conf = self.conf.get('log-processor', {})
+                proxy_server_conf_loc = stats_conf.get('proxy_server_conf',
+                                                '/etc/swift/proxy-server.conf')
+            proxy_server_conf = appconfig('config:%s' % proxy_server_conf_loc,
                                         name='proxy-server')
             self._internal_proxy = InternalProxy(proxy_server_conf,
                                                  self.logger,
