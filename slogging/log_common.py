@@ -24,6 +24,8 @@ import os
 import errno
 import fcntl
 
+from eventlet import sleep
+
 from swift.common.memcached import MemcacheRing
 from slogging.internal_proxy import InternalProxy
 from swift.common.utils import get_logger
@@ -175,7 +177,7 @@ def multiprocess_collate(processor_klass, processor_args, processor_method,
         try:
             item, data = out_queue.get_nowait()
         except Queue.Empty:
-            time.sleep(.01)
+            sleep(.01)
         else:
             if isinstance(data, Exception):
                 if logger:
