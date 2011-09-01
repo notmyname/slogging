@@ -1,21 +1,8 @@
 import gettext
 
+#: Version information (major, minor, revision[, 'dev']).
+version_info = (1, 1, 3)
+#: Version string 'major.minor.revision'.
+version = __version__ = ".".join(map(str, version_info))
 
-class Version(object):
-    def __init__(self, canonical_version, final):
-        self.canonical_version = canonical_version
-        self.final = final
-
-    @property
-    def pretty_version(self):
-        if self.final:
-            return self.canonical_version
-        else:
-            return '%s-dev' % (self.canonical_version,)
-
-
-_version = Version('1.1.2', False)
-__version__ = _version.pretty_version
-__canonical_version__ = _version.canonical_version
-
-gettext.install('swift')
+gettext.install('slogging')
