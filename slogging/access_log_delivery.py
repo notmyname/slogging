@@ -27,10 +27,10 @@ import random
 import errno
 
 from swift.common.daemon import Daemon
-from swift.common.utils import get_logger, TRUE_VALUES, split_path
+from swift.common.utils import get_logger, TRUE_VALUES, split_path, lock_file
 from swift.common.exceptions import LockTimeout, ChunkReadTimeout
 from slogging.log_common import LogProcessorCommon, multiprocess_collate, \
-                                   BadFileDownload, lock_file
+                                   BadFileDownload
 
 
 month_map = '_ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()
