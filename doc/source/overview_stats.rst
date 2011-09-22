@@ -127,14 +127,14 @@ Running the stats system on SAIO
         (?P<day>[0-3][0-9])
         (?P<hour>[0-2][0-9])
         .*$
-    class_path = swift.stats.access_processor.AccessLogProcessor
+    class_path = slogging.access_processor.AccessLogProcessor
     user = <your-user-name>
 
     [log-processor-stats]
     swift_account = <your-stats-account-hash>
     container_name = account_stats
     log_dir = /var/log/swift/stats/
-    class_path = swift.stats.stats_processor.StatsLogProcessor
+    class_path = slogging.stats_processor.StatsLogProcessor
     devices = /srv/1/node
     mount_check = false
     user = <your-user-name>
@@ -143,7 +143,7 @@ Running the stats system on SAIO
     swift_account = <your-stats-account-hash>
     container_name = container_stats
     log_dir = /var/log/swift/stats/
-    class_path = swift.stats.stats_processor.StatsLogProcessor
+    class_path = slogging.stats_processor.StatsLogProcessor
     processable = false
     devices = /srv/1/node
     mount_check = false
