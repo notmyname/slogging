@@ -22,7 +22,7 @@ source_filename_pattern = ^
     .*$
 # new_log_cutoff = 7200
 # unlink_log = True
-class_path = swift.stats.access_processor.AccessLogProcessor
+class_path = slogging.access_processor.AccessLogProcessor
 # service ips is for client ip addresses that should be counted as servicenet
 # service_ips =
 # load balancer private ips is for load balancer ip addresses that should be
