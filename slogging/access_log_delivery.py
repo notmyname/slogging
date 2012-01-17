@@ -121,7 +121,7 @@ class AccessLogDelivery(LogProcessorCommon):
         buffer_limit = conf.get('buffer_limit', '10485760')
         self.file_buffer = FileBuffer(buffer_limit, logger)
         self.hidden_ips = [x.strip() for x in
-                            conf.get('hidden_ips', '').split(',') if s.stip()]
+                            conf.get('hidden_ips', '').split(',') if x.strip()]
 
     def process_one_file(self, account, container, object_name):
         files_to_upload = set()
