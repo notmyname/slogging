@@ -21,6 +21,7 @@ import gzip
 import re
 import sys
 from paste.deploy import appconfig
+import zlib
 
 from slogging.internal_proxy import InternalProxy
 from swift.common.daemon import Daemon
@@ -143,14 +144,22 @@ class LogUploader(Daemon):
             return
         for filename, match in filename2match.items():
             # don't process very new logs
-            seconds_since_mtime = time.time() - os.stat(filename).st_mtime
+            try:
+                seconds_since_mtime = time.time() - os.stat(filename).st_mtime
+            except OSError:
+                # filename wasn't found, skip it
+                continue
             if seconds_since_mtime < self.new_log_cutoff:
                 self.logger.debug(_("Skipping log: %(file)s "
                                     "(< %(cutoff)d seconds old)") % {
                                         'file': filename,
                                         'cutoff': self.new_log_cutoff})
                 continue
-            self.upload_one_log(filename, **match)
+            try:
+                self.upload_one_log(filename, **match)
+            except Exception:
+                self.logger.exception(
+                    _('ERROR: could not upload %s') % filename)
 
     def upload_one_log(self, filename, year, month, day, hour):
         """
