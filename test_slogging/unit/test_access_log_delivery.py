@@ -81,6 +81,28 @@ class TestAccessLogDelivery(unittest.TestCase):
                     'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3'}
         self.assertEquals(res, expected)
 
+    def test_log_line_parser_hidden_ip(self):
+        conf = {'hidden_ips': '1.2.3.4'}
+        p = access_log_delivery.AccessLogDelivery(conf, DumbLogger())
+        log_line = [str(x) for x in range(18)]
+        log_line[1] = 'proxy-server'
+        log_line[2] = '1.2.3.4'
+        log_line[4] = '1/Jan/3/4/5/6'
+        log_line[6] = '/v1/a/c/o?foo'
+        log_line = 'x' * 16 + ' '.join(log_line)
+        res = p.log_line_parser(log_line)
+        expected = '0.0.0.0'
+        self.assertEquals(res['client_ip'], expected)
+        log_line = [str(x) for x in range(18)]
+        log_line[1] = 'proxy-server'
+        log_line[2] = '4.3.2.1'
+        log_line[4] = '1/Jan/3/4/5/6'
+        log_line[6] = '/v1/a/c/o?foo'
+        log_line = 'x' * 16 + ' '.join(log_line)
+        res = p.log_line_parser(log_line)
+        expected = '4.3.2.1'
+        self.assertEquals(res['client_ip'], expected)
+
     def test_log_line_parser_field_count(self):
         p = access_log_delivery.AccessLogDelivery({}, DumbLogger())
         # too few fields
