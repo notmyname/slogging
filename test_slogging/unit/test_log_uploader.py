@@ -81,6 +81,12 @@ class MockLogUploader(_orig_LogUploader):
                                          day, hour)
 
 
+class ErrorLogUploader(MockLogUploader):
+
+    def upload_one_log(self, filename, year, month, day, hour):
+        raise OSError('foo bar')
+
+
 class TestLogUploader(unittest.TestCase):
 
     def setUp(self):
@@ -93,6 +99,20 @@ class TestLogUploader(unittest.TestCase):
     def tearDown(self):
         log_uploader.appconfig = self._orig_appconfig
         log_uploader.InternalProxy = self._orig_InternalProxy
+
+    def test_bad_upload(self):
+        files = [datetime.now().strftime('%Y%m%d%H')]
+        with temptree(files, contents=[COMPRESSED_DATA] * len(files)) as t:
+            # invalid pattern
+            conf = {'log_dir': t,
+                    'source_filename_pattern': '%Y%m%d%h'}  # should be %H
+            uploader = MockLogUploader(conf)
+            self.assertRaises(SystemExit, uploader.upload_all_logs)
+
+            conf = {'log_dir': t, 'source_filename_pattern': access_regex}
+            uploader = ErrorLogUploader(conf)
+            # this tests if the exception is handled
+            uploader.upload_all_logs()
 
     def test_bad_pattern_in_config(self):
         files = [datetime.now().strftime('%Y%m%d%H')]
