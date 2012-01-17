@@ -157,7 +157,7 @@ class LogUploader(Daemon):
                 continue
             try:
                 self.upload_one_log(filename, **match)
-            except (OSError, zlib.error):
+            except (OSError, zlib.error, IOError):
                 self.logger.exception(
                     _('ERROR: could not upload %s') % filename)
 
