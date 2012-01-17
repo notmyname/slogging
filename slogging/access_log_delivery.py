@@ -120,6 +120,8 @@ class AccessLogDelivery(LogProcessorCommon):
         self.working_dir = conf.get('working_dir', '/tmp/swift').rstrip('/')
         buffer_limit = conf.get('buffer_limit', '10485760')
         self.file_buffer = FileBuffer(buffer_limit, logger)
+        self.hidden_ips = [x.strip() for x in
+                            conf.get('hidden_ips', '').split(',') if s.stip()]
 
     def process_one_file(self, account, container, object_name):
         files_to_upload = set()
@@ -210,6 +212,8 @@ class AccessLogDelivery(LogProcessorCommon):
         if object_name is not None:
             object_name = object_name.split('?', 1)[0]
         account = account.split('?', 1)[0]
+        if client_ip in self.hidden_ips:
+            client_ip = '0.0.0.0'
         d['client_ip'] = client_ip
         d['lb_ip'] = lb_ip
         d['method'] = method
