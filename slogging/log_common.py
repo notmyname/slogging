@@ -57,6 +57,15 @@ class LogProcessorCommon(object):
             if s.strip()])
         self.conf = conf
         self._internal_proxy = None
+        self.lookback_hours = int(conf.get('lookback_hours', '120'))
+        self.lookback_window = int(conf.get('lookback_window',
+                                   str(self.lookback_hours)))
+        self.log_processor_account = conf['swift_account']
+        self.log_processor_container = conf.get('container_name',
+                                            'simple_billing_data')
+        self.processed_files_object_name = \
+                conf.get('processed_files_object_name',
+                        'processed_files.pickle.gz')
 
     @property
     def internal_proxy(self):
@@ -78,6 +87,62 @@ class LogProcessorCommon(object):
                                                  self.logger,
                                                  retries=3)
         return self._internal_proxy
+
+    def calculate_lookback(self):
+        if self.lookback_hours == 0:
+            lookback_start = None
+            lookback_end = None
+        else:
+            delta_hours = datetime.timedelta(hours=self.lookback_hours)
+            lookback_start = datetime.datetime.now() - delta_hours
+            lookback_start = lookback_start.strftime('%Y%m%d%H')
+            if self.lookback_window == 0:
+                lookback_end = None
+            else:
+                delta_window = datetime.timedelta(hours=self.lookback_window)
+                lookback_end = datetime.datetime.now() - \
+                               delta_hours + \
+                               delta_window
+                lookback_end = lookback_end.strftime('%Y%m%d%H')
+        self.logger.debug('lookback_start: %s' % lookback_start)
+        self.logger.debug('lookback_end: %s' % lookback_end)
+        return (lookback_start, lookback_end)
+
+    def load_already_processed_files(self):
+        try:
+            # Note: this file (or data set) will grow without bound.
+            # In practice, if it becomes a problem (say, after many months of
+            # running), one could manually prune the file to remove older
+            # entries. Automatically pruning on each run could be dangerous.
+            # There is not a good way to determine when an old entry should be
+            # pruned (lookback_hours could be set to anything and could change)
+            processed_files_stream = self.get_object_data(
+                                        self.log_processor_account,
+                                        self.log_processor_container,
+                                        self.processed_files_object_name,
+                                        compressed=True)
+            buf = '\n'.join(x for x in processed_files_stream)
+            if buf:
+                already_processed_files = cPickle.loads(buf)
+            else:
+                already_processed_files = set()
+        except BadFileDownload, err:
+            if err.status_code == 404:
+                already_processed_files = set()
+            else:
+                self.logger.error(_('Simple billing unable to load list '
+                    'of already processed log files'))
+                return
+        self.logger.debug(_('found %d processed files') % \
+                          len(already_processed_files))
+        return already_processed_files
+
+    def save_processed_files(self, processed_files_data):
+        s = cPickle.dumps(processed_files_data, cPickle.HIGHEST_PROTOCOL)
+        f = cStringIO.StringIO(s)
+        return self.internal_proxy.upload_file(f, self.log_processor_account,
+                                            self.log_processor_container,
+                                            self.processed_files_object_name)
 
     def get_object_data(self, swift_account, container_name, object_name,
                         compressed=False):
