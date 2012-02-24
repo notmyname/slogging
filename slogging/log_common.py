@@ -201,16 +201,12 @@ def multiprocess_collate(processor_klass, processor_args, processor_method,
 def collate_worker(processor_klass, processor_args, processor_method, in_queue,
                    out_queue):
     '''worker process for multiprocess_collate'''
-    in_queue.cancel_join_thread()
-    out_queue.cancel_join_thread()
     try:
         p = processor_klass(*processor_args)
         while True:
             item = in_queue.get()
             if item is None:
                 # no more work to process
-                in_queue.close()
-                out_queue.close()
                 break
             try:
                 method = getattr(p, processor_method)
@@ -223,5 +219,6 @@ def collate_worker(processor_klass, processor_args, processor_method, in_queue,
             out_queue.put((item, ret))
     except Exception, err:
         print '****ERROR in worker****\n%r\n********' % err
+    finally:
         in_queue.close()
         out_queue.close()
