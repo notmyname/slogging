@@ -39,13 +39,12 @@ class TestAccessProcessor(unittest.TestCase):
                     'bytes_out': 13, 'container_name': 'c', 'day': '1',
                     'minute': '5', 'account': 'a', 'hour': '4',
                     'referrer': '9', 'request': '/v1/a/c/o',
-                    'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3'}
+                    'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3',
+                    'log_source': None}
         for param in access_processor.LISTING_PARAMS:
             expected[param] = 1
         expected['query'] = query
-        self.assertEquals(res['bytes_in'] , expected['bytes_in'])
-        self.assertEquals(res['bytes_out'] , expected['bytes_out'])
-        self.assertEquals(res['query'] , expected['query'])
+        self.assertEquals(res, expected)
 
     def test_log_line_parser_field_count(self):
         p = access_processor.AccessLogProcessor({})
