@@ -242,13 +242,15 @@ def multiprocess_collate(processor_klass, processor_args, processor_method,
                                           processor_args,
                                           processor_method,
                                           in_queue,
-                                          out_queue))
+                                          out_queue,
+                                          logger))
         p.start()
         results.append(p)
     for x in items_to_process:
         in_queue.put(x)
     for _junk in range(worker_count):
         in_queue.put(None)  # tell the worker to end
+    in_queue.join_thread()
     in_queue.close()
     while True:
         try:
@@ -270,7 +272,7 @@ def multiprocess_collate(processor_klass, processor_args, processor_method,
 
 
 def collate_worker(processor_klass, processor_args, processor_method, in_queue,
-                   out_queue):
+                   out_queue, logger=None):
     '''worker process for multiprocess_collate'''
     try:
         p = processor_klass(*processor_args)
@@ -294,7 +296,10 @@ def collate_worker(processor_klass, processor_args, processor_method, in_queue,
                 ret.tb_str = ''.join(traceback.format_tb(tb))
             out_queue.put((item, ret))
     except Exception, err:
-        print '****ERROR in worker****\n%r\n********' % err
+        if logger:
+            logger.exception('Error in worker')
     finally:
+        in_queue.join_thread()
         in_queue.close()
+        out_queue.join_thread()
         out_queue.close()
