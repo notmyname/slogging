@@ -58,9 +58,8 @@ class DumbInternalProxy(object):
 
 class TestLogProcessor(unittest.TestCase):
 
-    proxy_config = {'log-processor': {
-
-                    }
+    proxy_config = {'log-processor': {},
+                    'swift_account': 'foo'
                    }
     access_test_line = 'Jul  9 04:14:30 saio proxy-server 1.2.3.4 4.5.6.7 '\
                     '09/Jul/2010/04/14/30 GET '\

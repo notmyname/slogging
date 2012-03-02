@@ -63,9 +63,10 @@ class FakeMemcache(object):
 
 class TestAccessLogDelivery(unittest.TestCase):
 
+    conf = {'swift_account': 'foo'}
+
     def test_log_line_parser_query_args(self):
-        c = {'swift_account': 'foo'}
-        p = access_log_delivery.AccessLogDelivery(c, DumbLogger())
+        p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
         log_line = [str(x) for x in range(18)]
         log_line[1] = 'proxy-server'
         log_line[4] = '1/Jan/3/4/5/6'
@@ -105,8 +106,7 @@ class TestAccessLogDelivery(unittest.TestCase):
         self.assertEquals(res['client_ip'], expected)
 
     def test_log_line_parser_field_count(self):
-        c = {'swift_account': 'foo'}
-        p = access_log_delivery.AccessLogDelivery(c, DumbLogger())
+        p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
         # too few fields
         log_line = [str(x) for x in range(17)]
         log_line[1] = 'proxy-server'
@@ -150,8 +150,7 @@ class TestAccessLogDelivery(unittest.TestCase):
         self.assertEquals(res, expected)
 
     def test_make_clf_from_parts(self):
-        c = {'swift_account': 'foo'}
-        p = access_log_delivery.AccessLogDelivery(c, DumbLogger())
+        p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
         log_line = [str(x) for x in range(18)]
         log_line[1] = 'proxy-server'
         log_line[4] = '1/Jan/3/4/5/6'
@@ -163,8 +162,7 @@ class TestAccessLogDelivery(unittest.TestCase):
         self.assertEquals(clf, expect)
 
     def test_convert_log_line(self):
-        c = {'swift_account': 'foo'}
-        p = access_log_delivery.AccessLogDelivery(c, DumbLogger())
+        p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
         log_line = [str(x) for x in range(18)]
         log_line[1] = 'proxy-server'
         log_line[4] = '1/Jan/3/4/5/6'
@@ -178,8 +176,7 @@ class TestAccessLogDelivery(unittest.TestCase):
         self.assertEquals(res, expected)
 
     def test_get_container_save_log_flag(self):
-        c = {'swift_account': 'foo'}
-        p = access_log_delivery.AccessLogDelivery(c, DumbLogger())
+        p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
 
         def my_get_metadata_true(*a, **kw):
             return {p.metadata_key: 'yes'}
