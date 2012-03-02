@@ -15,7 +15,7 @@
 
 import multiprocessing
 import Queue
-import datetime
+from datetime import datetime, timedelta
 import zlib
 import time
 from paste.deploy import appconfig
@@ -93,16 +93,14 @@ class LogProcessorCommon(object):
             lookback_start = None
             lookback_end = None
         else:
-            delta_hours = datetime.timedelta(hours=self.lookback_hours)
-            lookback_start = datetime.datetime.now() - delta_hours
+            delta_hours = timedelta(hours=self.lookback_hours)
+            lookback_start = datetime.now() - delta_hours
             lookback_start = lookback_start.strftime('%Y%m%d%H')
             if self.lookback_window == 0:
                 lookback_end = None
             else:
-                delta_window = datetime.timedelta(hours=self.lookback_window)
-                lookback_end = datetime.datetime.now() - \
-                               delta_hours + \
-                               delta_window
+                delta_window = timedelta(hours=self.lookback_window)
+                lookback_end = datetime.now() - delta_hours + delta_window
                 lookback_end = lookback_end.strftime('%Y%m%d%H')
         self.logger.debug('lookback_start: %s' % lookback_start)
         self.logger.debug('lookback_end: %s' % lookback_end)

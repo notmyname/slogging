@@ -1,4 +1,5 @@
 import os
+import collections
 from swift.common.utils import lock_file
 
 
