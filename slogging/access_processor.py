@@ -29,12 +29,11 @@ class AccessLogProcessor(object):
 
     def __init__(self, conf):
         self.server_name = conf.get('server_name', 'proxy-server')
-        self.lb_private_ips = [x.strip() for x in \
-                               conf.get('lb_private_ips', '').split(',')\
-                               if x.strip()]
-        self.service_ips = [x.strip() for x in \
-                            conf.get('service_ips', '').split(',')\
-                            if x.strip()]
+        for conf_tag in ['lb_private_ips', 'service_ips',
+                         'service_log_sources']:
+            setattr(self, conf_tag,
+                [x.strip() for x in conf.get(conf_tag, '').split(',') \
+                 if x.strip()])
         self.warn_percent = float(conf.get('warn_percent', '0.8'))
         self.logger = get_logger(conf, log_route='access-processor')
 
@@ -42,6 +41,8 @@ class AccessLogProcessor(object):
         '''given a raw access log line, return a dict of the good parts'''
         d = {}
         try:
+            log_source = None
+            split_log = raw_log[16:].split(' ')
             (unused,
             server,
             client_ip,
@@ -59,8 +60,9 @@ class AccessLogProcessor(object):
             etag,
             trans_id,
             headers,
-            processing_time) = (unquote(x) for x in
-                                raw_log[16:].split(' ')[:18])
+            processing_time) = (unquote(x) for x in split_log[:18])
+            if len(split_log) > 18:
+                log_source = split_log[18]
         except ValueError:
             self.logger.debug(_('Bad line data: %s') % repr(raw_log))
             return {}
@@ -130,6 +132,7 @@ class AccessLogProcessor(object):
         d['bytes_out'] = int(d['bytes_out'].replace('-', '0'))
         d['bytes_in'] = int(d['bytes_in'].replace('-', '0'))
         d['code'] = int(d['code'])
+        d['log_source'] = log_source
         return d
 
     def process(self, obj_stream, data_object_account, data_object_container,
@@ -167,13 +170,12 @@ class AccessLogProcessor(object):
 
             aggr_key = (account, year, month, day, hour)
             d = hourly_aggr_info.get(aggr_key, {})
-            if line_data['lb_ip'] in self.lb_private_ips:
+            if line_data['lb_ip'] in self.lb_private_ips or \
+                    line_data['client_ip'] in self.service_ips or \
+                    line_data['log_source'] in self.service_log_sources:
                 source = 'service'
             else:
                 source = 'public'
-
-            if line_data['client_ip'] in self.service_ips:
-                source = 'service'
 
             d[(source, 'bytes_out')] = d.setdefault((
                 source, 'bytes_out'), 0) + bytes_out
