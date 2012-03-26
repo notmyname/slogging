@@ -222,7 +222,7 @@ def collate_worker(processor_klass, processor_args, processor_method, in_queue,
                 return
             try:
                 ret = method(*item)
-            except Exception:
+            except:
                 err_type, err, tb = sys.exc_info()
                 # Use err_type since unplickling err in the parent process
                 # will fail if it has a custom constructor with required
