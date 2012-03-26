@@ -23,6 +23,8 @@ from contextlib import contextmanager
 import os
 import errno
 import fcntl
+import sys
+import traceback
 
 from eventlet import sleep
 
@@ -35,6 +37,12 @@ from swift.common.exceptions import ChunkReadTimeout, LockTimeout
 class BadFileDownload(Exception):
     def __init__(self, status_code=None):
         self.status_code = status_code
+
+
+class WorkerError(Exception):
+
+    def __init__(self):
+        self.tb_str = ''  # ensure that there is always something here
 
 
 class LogProcessorCommon(object):
@@ -188,9 +196,9 @@ def multiprocess_collate(processor_klass, processor_args, processor_method,
             if logger:
                 logger.exception('error reading from out queue')
         else:
-            if isinstance(data, Exception):
+            if isinstance(data, WorkerError):
                 if logger:
-                    logger.exception(data)
+                    logger.error(data.tb_str)
             else:
                 yield item, data
         if not any(r.is_alive() for r in results) and out_queue.empty():
@@ -214,8 +222,13 @@ def collate_worker(processor_klass, processor_args, processor_method, in_queue,
                 return
             try:
                 ret = method(*item)
-            except Exception, err:
-                ret = err
+            except Exception:
+                err_type, err, tb = sys.exc_info()
+                # Use err_type since unplickling err in the parent process
+                # will fail if it has a custom constructor with required
+                # parameters.
+                ret = WorkerError()
+                ret.tb_str = ''.join(traceback.format_tb(tb))
             out_queue.put((item, ret))
     except Exception, err:
         print '****ERROR in worker****\n%r\n********' % err
