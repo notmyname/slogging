@@ -59,7 +59,7 @@ class LogProcessorCommon(object):
         self._internal_proxy = None
         self.lookback_hours = int(conf.get('lookback_hours', '120'))
         self.lookback_window = int(conf.get('lookback_window',
-                                   str(self.lookback_hours)))
+                                   self.lookback_hours))
         self.log_processor_account = conf['swift_account']
         self.log_processor_container = conf.get('container_name',
                                             'simple_billing_data')
