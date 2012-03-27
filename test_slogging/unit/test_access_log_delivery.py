@@ -63,7 +63,8 @@ class FakeMemcache(object):
 
 class TestAccessLogDelivery(unittest.TestCase):
 
-    conf = {'swift_account': 'foo'}
+    conf = {'swift_account': 'foo',
+            'log_source_account': 'bar'}
 
     def test_log_line_parser_query_args(self):
         p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
@@ -84,7 +85,8 @@ class TestAccessLogDelivery(unittest.TestCase):
         self.assertEquals(res, expected)
 
     def test_log_line_parser_hidden_ip(self):
-        conf = {'hidden_ips': '1.2.3.4', 'swift_account': 'foo'}
+        conf = {'hidden_ips': '1.2.3.4', 'swift_account': 'foo',
+                'log_source_account': 'bar'}
         p = access_log_delivery.AccessLogDelivery(conf, DumbLogger())
         log_line = [str(x) for x in range(18)]
         log_line[1] = 'proxy-server'
@@ -204,7 +206,8 @@ class TestAccessLogDelivery(unittest.TestCase):
 
     def test_process_one_file(self):
         with temptree([]) as t:
-            conf = {'working_dir': t, 'swift_account': 'foo'}
+            conf = {'working_dir': t, 'swift_account': 'foo',
+                    'log_source_account': 'bar'}
             p = access_log_delivery.AccessLogDelivery(conf, DumbLogger())
 
             def my_get_object_data(*a, **kw):
