@@ -3,3 +3,4 @@ slogging.egg-info/
 doc/build/*
 dist
 .coverage
+deb_dist
