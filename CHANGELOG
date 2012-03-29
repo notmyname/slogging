@@ -1,3 +1,10 @@
+slogging (1.1.6)
+
+  - added log source filtering
+  - fixed possible hang in log_common.multiprocess_collate
+  - added functionality for common log processing functions
+  - moved to stdeb.cfg packaging instead of slogging-debian
+
 slogging (1.1.5)
 
   - better multiprocessing queue management
