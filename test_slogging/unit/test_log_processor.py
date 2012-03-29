@@ -92,8 +92,8 @@ class TestLogProcessor(unittest.TestCase):
                     '6 95 - txfa431231-7f07-42fd-8fc7-7da9d8cc1f90 - 0.0262'
     stats_test_line = 'account,1,2,3'
     proxy_config = {'log-processor': {
-
-                    }
+                    },
+                    'swift_account': 'foo'
                    }
 
     def test_lazy_load_internal_proxy(self):
@@ -105,7 +105,8 @@ use = egg:swift#proxy
         with tmpfile(dummy_proxy_config) as proxy_config_file:
             conf = {'log-processor': {
                     'proxy_server_conf': proxy_config_file,
-                }
+                },
+                'swift_account': 'foo'
             }
             p = log_processor.LogProcessor(conf, DumbLogger())
             self.assert_(isinstance(p._internal_proxy,
@@ -116,7 +117,8 @@ use = egg:swift#proxy
         # test with empty config variable
         conf = {'log-processor': {
                 'proxy_server_conf': '',
-            }
+            },
+            'swift_account': 'foo'
         }
         q = log_processor.LogProcessor(conf, DumbLogger())
         self.assert_(isinstance(q._internal_proxy,
@@ -322,144 +324,6 @@ use = egg:swift#proxy
             # these only work for Py2.7+
             #self.assertIsInstance(k, str)
             self.assertTrue(isinstance(k, str), type(k))
-
-    def test_collate_worker(self):
-        try:
-            log_processor.LogProcessor._internal_proxy = DumbInternalProxy()
-
-            def get_object_data(*a, **kw):
-                return [self.access_test_line]
-            orig_get_object_data = log_processor.LogProcessor.get_object_data
-            log_processor.LogProcessor.get_object_data = get_object_data
-            proxy_config = self.proxy_config.copy()
-            proxy_config.update({
-                    'log-processor-access': {
-                        'source_filename_format': '%Y%m%d%H*',
-                        'class_path':
-                            'slogging.access_processor.AccessLogProcessor'
-                    }})
-            processor_args = (proxy_config, DumbLogger())
-            q_in = Queue.Queue()
-            q_out = Queue.Queue()
-            work_request = ('access', 'a', 'c', 'o')
-            q_in.put(work_request)
-            q_in.put(None)
-            processor_klass = log_processor.LogProcessor
-            log_common.collate_worker(processor_klass, processor_args,
-                                      'process_one_file', q_in, q_out)
-            item, ret = q_out.get()
-            self.assertEquals(item, work_request)
-            expected = {('acct', '2010', '07', '09', '04'):
-                        {('public', 'object', 'GET', '2xx'): 1,
-                        ('public', 'bytes_out'): 95,
-                        'marker_query': 0,
-                        'format_query': 1,
-                        'delimiter_query': 0,
-                        'path_query': 0,
-                        ('public', 'bytes_in'): 6,
-                        'prefix_query': 0}}
-            self.assertEquals(ret, expected)
-        finally:
-            log_processor.LogProcessor._internal_proxy = None
-            log_processor.LogProcessor.get_object_data = orig_get_object_data
-
-    def test_collate_worker_error(self):
-        def get_object_data(*a, **kw):
-            raise Exception()
-        orig_get_object_data = log_processor.LogProcessor.get_object_data
-        try:
-            log_processor.LogProcessor.get_object_data = get_object_data
-            proxy_config = self.proxy_config.copy()
-            proxy_config.update({
-                    'log-processor-access': {
-                        'source_filename_format': '%Y%m%d%H*',
-                        'class_path':
-                            'slogging.access_processor.AccessLogProcessor'
-                    }})
-            processor_args = (proxy_config, DumbLogger())
-            q_in = Queue.Queue()
-            q_out = Queue.Queue()
-            work_request = ('access', 'a', 'c', 'o')
-            q_in.put(work_request)
-            q_in.put(None)
-            processor_klass = log_processor.LogProcessor
-            log_common.collate_worker(processor_klass, processor_args,
-                                      'process_one_file', q_in, q_out)
-            item, ret = q_out.get()
-            self.assertEquals(item, work_request)
-            # these only work for Py2.7+
-            #self.assertIsInstance(ret, log_common.BadFileDownload)
-            self.assertTrue(isinstance(ret, Exception))
-        finally:
-            log_processor.LogProcessor.get_object_data = orig_get_object_data
-
-    def test_multiprocess_collate(self):
-        try:
-            log_processor.LogProcessor._internal_proxy = DumbInternalProxy()
-
-            def get_object_data(*a, **kw):
-                return [self.access_test_line]
-            orig_get_object_data = log_processor.LogProcessor.get_object_data
-            log_processor.LogProcessor.get_object_data = get_object_data
-            proxy_config = self.proxy_config.copy()
-            proxy_config.update({
-                    'log-processor-access': {
-                        'source_filename_format': '%Y%m%d%H*',
-                        'class_path':
-                            'slogging.access_processor.AccessLogProcessor'
-                    }})
-            processor_args = (proxy_config, DumbLogger())
-            item = ('access', 'a', 'c', 'o')
-            logs_to_process = [item]
-            processor_klass = log_processor.LogProcessor
-            results = log_processor.multiprocess_collate(processor_klass,
-                                                         processor_args,
-                                                         'process_one_file',
-                                                         logs_to_process,
-                                                         1)
-            results = list(results)
-            expected = [(item, {('acct', '2010', '07', '09', '04'):
-                        {('public', 'object', 'GET', '2xx'): 1,
-                        ('public', 'bytes_out'): 95,
-                        'marker_query': 0,
-                        'format_query': 1,
-                        'delimiter_query': 0,
-                        'path_query': 0,
-                        ('public', 'bytes_in'): 6,
-                        'prefix_query': 0}})]
-            self.assertEquals(results, expected)
-        finally:
-            log_processor.LogProcessor._internal_proxy = None
-            log_processor.LogProcessor.get_object_data = orig_get_object_data
-
-    def test_multiprocess_collate_errors(self):
-        def get_object_data(*a, **kw):
-            raise log_common.BadFileDownload()
-        orig_get_object_data = log_processor.LogProcessor.get_object_data
-        try:
-            log_processor.LogProcessor.get_object_data = get_object_data
-            proxy_config = self.proxy_config.copy()
-            proxy_config.update({
-                    'log-processor-access': {
-                        'source_filename_format': '%Y%m%d%H*',
-                        'class_path':
-                            'slogging.access_processor.AccessLogProcessor'
-                    }})
-            processor_args = (proxy_config, DumbLogger())
-            item = ('access', 'a', 'c', 'o')
-            logs_to_process = [item]
-            processor_klass = log_processor.LogProcessor
-            results = log_common.multiprocess_collate(processor_klass,
-                                                      processor_args,
-                                                      'process_one_file',
-                                                      logs_to_process,
-                                                      1)
-            results = list(results)
-            expected = []
-            self.assertEquals(results, expected)
-        finally:
-            log_processor.LogProcessor._internal_proxy = None
-            log_processor.LogProcessor.get_object_data = orig_get_object_data
 
 
 class TestLogProcessorDaemon(unittest.TestCase):
