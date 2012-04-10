@@ -38,7 +38,8 @@ class LogProcessor(LogProcessorCommon):
     """Load plugins, process logs"""
 
     def __init__(self, conf, logger):
-        super(LogProcessor, self).__init__(conf, logger, 'log-processor')
+        basic_conf = conf['log-processor']
+        super(LogProcessor, self).__init__(basic_conf, logger, 'log-processor')
 
         # load the processing plugins
         self.plugins = {}

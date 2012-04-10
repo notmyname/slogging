@@ -92,8 +92,8 @@ class TestLogProcessor(unittest.TestCase):
                     '6 95 - txfa431231-7f07-42fd-8fc7-7da9d8cc1f90 - 0.0262'
     stats_test_line = 'account,1,2,3'
     proxy_config = {'log-processor': {
-                    },
                     'swift_account': 'foo'
+                    }
                    }
 
     def test_lazy_load_internal_proxy(self):
@@ -105,8 +105,8 @@ use = egg:swift#proxy
         with tmpfile(dummy_proxy_config) as proxy_config_file:
             conf = {'log-processor': {
                     'proxy_server_conf': proxy_config_file,
-                },
-                'swift_account': 'foo'
+                    'swift_account': 'foo'
+                }
             }
             p = log_processor.LogProcessor(conf, DumbLogger())
             self.assert_(isinstance(p._internal_proxy,
@@ -117,8 +117,8 @@ use = egg:swift#proxy
         # test with empty config variable
         conf = {'log-processor': {
                 'proxy_server_conf': '',
-            },
-            'swift_account': 'foo'
+                'swift_account': 'foo'
+            }
         }
         q = log_processor.LogProcessor(conf, DumbLogger())
         self.assert_(isinstance(q._internal_proxy,
