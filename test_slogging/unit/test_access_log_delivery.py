@@ -19,6 +19,7 @@ import unittest
 from contextlib import contextmanager
 
 from test.unit import temptree
+from swift.common import utils
 from slogging import access_log_delivery
 
 
@@ -65,6 +66,9 @@ class TestAccessLogDelivery(unittest.TestCase):
 
     conf = {'swift_account': 'foo',
             'log_source_account': 'bar'}
+
+    def setUp(self):
+        utils.HASH_PATH_SUFFIX = 'endcap'
 
     def test_log_line_parser_query_args(self):
         p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())
