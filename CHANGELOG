@@ -1,3 +1,7 @@
+slogging (1.1.7)
+
+  - fixed tests are config references
+
 slogging (1.1.6)
 
   - added log source filtering
