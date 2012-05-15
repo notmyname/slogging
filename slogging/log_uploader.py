@@ -81,6 +81,7 @@ class LogUploader(Daemon):
                 (?P<day>[0-3][0-9])
                 (?P<hour>[0-2][0-9])
                 .*$''' % plugin_name)
+        self.content_type = uploader_conf.get('content_type')
 
     def run_once(self, *args, **kwargs):
         self.logger.info(_("Uploading logs"))
@@ -184,11 +185,15 @@ class LogUploader(Daemon):
         # have unique filenames and protect against uploading one file
         # more than one time. By using md5, we get an etag for free.
         target_filename = '/'.join([year, month, day, hour, filehash + '.gz'])
+        metadata = {'x-object-meta-original-name': filename}
+        if self.content_type:
+            metadata['Content-Type'] = self.content_type
         if self.internal_proxy.upload_file(filename,
                                           self.swift_account,
                                           self.container_name,
                                           target_filename,
-                                          compress=(not already_compressed)):
+                                          compress=(not already_compressed),
+                                          headers=metadata):
             self.logger.debug(_("Uploaded log %(file)s to %(target)s") %
                 {'file': filename, 'target': target_filename})
             if self.unlink_log:

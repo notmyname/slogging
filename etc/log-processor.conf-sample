@@ -34,6 +34,7 @@ class_path = slogging.access_processor.AccessLogProcessor
 # list of swift.sources (see swift/proxy/server.py posthooklogger)
 # that count as service traffic
 # service_log_sources =
+# content_type =
 
 [log-processor-stats]
 # log_dir = /var/log/swift/
@@ -45,6 +46,7 @@ class_path = slogging.stats_processor.StatsLogProcessor
 # devices = /srv/node
 # mount_check = true
 # user = swift
+# content_type =
 
 [log-processor-container-stats]
 # log_dir = /var/log/swift/
@@ -58,3 +60,4 @@ processable = false
 # mount_check = true
 # user = swift
 # metadata_keys = comma separated list of user metadata keys to be collected
+# content_type =
