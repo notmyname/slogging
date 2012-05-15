@@ -193,7 +193,6 @@ class LogUploader(Daemon):
                                           self.container_name,
                                           target_filename,
                                           compress=(not already_compressed),
-                                          etag=filehash,
                                           headers=metadata):
             self.logger.debug(_("Uploaded log %(file)s to %(target)s") %
                 {'file': filename, 'target': target_filename})
