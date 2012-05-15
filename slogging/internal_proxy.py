@@ -96,7 +96,7 @@ class InternalProxy(object):
 
     def upload_file(self, source_file, account, container, object_name,
                     compress=True, content_type='application/x-gzip',
-                    etag=None):
+                    etag=None, headers=None):
         """
         Upload a file to cloud files.
 
@@ -115,10 +115,14 @@ class InternalProxy(object):
         if not self.create_container(account, container):
             return False
 
+        send_headers = {'Transfer-Encoding': 'chunked'}
+        if headers:
+            send_headers.update(headers)
+
         # upload the file to the account
         req = webob.Request.blank(target_name, content_type=content_type,
                             environ={'REQUEST_METHOD': 'PUT'},
-                            headers={'Transfer-Encoding': 'chunked'})
+                            headers=send_headers)
         req.content_length = None   # to make sure we send chunked data
         if etag:
             req.headers['etag'] = etag
