@@ -25,6 +25,8 @@ import errno
 import fcntl
 import sys
 import traceback
+import cPickle
+import cStringIO
 
 from eventlet import sleep
 
