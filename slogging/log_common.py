@@ -85,7 +85,8 @@ class LogProcessorCommon(object):
                 proxy_server_conf = None
             self._internal_proxy = InternalProxy(proxy_server_conf,
                                                  self.logger,
-                                                 retries=3)
+                                                 retries=3,
+                                                 memcache=self.memcache)
         return self._internal_proxy
 
     def calculate_lookback(self):
