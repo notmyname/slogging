@@ -91,7 +91,7 @@ class AccessLogDelivery(LogProcessorCommon):
 
     def get_logs_to_process(self, already_processed_files):
         lookback_start, lookback_end = self.calculate_lookback()
-        logs_to_process = self.log_processor.get_container_listing(
+        logs_to_process = self.get_container_listing(
                                                 self.source_account,
                                                 self.source_container,
                                                 lookback_start,

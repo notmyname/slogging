@@ -22,27 +22,6 @@ from slogging.compressing_file_reader import CompressingFileReader
 from swift.proxy.server import BaseApplication
 
 
-class MemcacheStub(object):
-
-    def get(self, *a, **kw):  # pragma: no cover
-        return None
-
-    def set(self, *a, **kw):  # pragma: no cover
-        return None
-
-    def incr(self, *a, **kw):  # pragma: no cover
-        return 0
-
-    def delete(self, *a, **kw):  # pragma: no cover
-        return None
-
-    def set_multi(self, *a, **kw):  # pragma: no cover
-        return None
-
-    def get_multi(self, *a, **kw):  # pragma: no cover
-        return []
-
-
 def make_request_body_file(source_file, compress=True):
     if hasattr(source_file, 'seek'):
         source_file.seek(0)
@@ -74,9 +53,9 @@ class InternalProxy(object):
     :param retries: number of times to retry each request
     """
 
-    def __init__(self, proxy_server_conf=None, logger=None, retries=0):
-        self.upload_app = BaseApplication(proxy_server_conf,
-                                          memcache=MemcacheStub(),
+    def __init__(self, proxy_server_conf=None, logger=None, retries=0,
+                 memcache=None):
+        self.upload_app = BaseApplication(proxy_server_conf, memcache=memcache,
                                           logger=logger)
         self.retries = retries
 
