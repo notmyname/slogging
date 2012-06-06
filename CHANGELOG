@@ -1,3 +1,9 @@
+slogging (1.1.8)
+
+  - added metadata to objects when they are uploaded by log-uploader
+  - updated internal_proxy to pass memcache through to the proxy server
+  - fixed import bug
+
 slogging (1.1.7)
 
   - fixed tests are config references
