@@ -48,6 +48,7 @@ def get_config(section_name=None, defaults=None):
                 % (config_file, section_name)
     return config
 
+
 def readuntil2crlfs(fd):
     rv = ''
     lc = ''
