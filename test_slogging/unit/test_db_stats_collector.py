@@ -22,7 +22,7 @@ import sqlite3
 from shutil import rmtree
 from slogging import db_stats_collector
 from tempfile import mkdtemp
-from test.unit import FakeLogger
+from test_slogging.unit import FakeLogger
 from swift.common.db import AccountBroker, ContainerBroker
 from swift.common.utils import mkdirs
 
