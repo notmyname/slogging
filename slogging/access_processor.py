@@ -17,6 +17,8 @@ import collections
 from urllib import unquote
 import copy
 
+from iptools import IpRangeList
+
 from swift.common.utils import split_path, get_logger
 
 month_map = '_ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()
@@ -31,9 +33,9 @@ class AccessLogProcessor(object):
         self.server_name = conf.get('server_name', 'proxy-server')
         for conf_tag in ['lb_private_ips', 'service_ips',
                          'service_log_sources']:
-            setattr(self, conf_tag,
+            setattr(self, conf_tag, IpRangeList(*
                 [x.strip() for x in conf.get(conf_tag, '').split(',') \
-                 if x.strip()])
+                 if x.strip()]))
         self.warn_percent = float(conf.get('warn_percent', '0.8'))
         self.logger = get_logger(conf, log_route='access-processor')
 

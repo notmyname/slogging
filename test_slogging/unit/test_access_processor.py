@@ -21,6 +21,12 @@ from slogging import access_processor
 
 class TestAccessProcessor(unittest.TestCase):
 
+    def test_CIDR_works(self):
+        p = access_processor.AccessLogProcessor({'lb_private_ips': '127.0.0.1,192.168/16,10/24' })
+        self.assertTrue('192.168.2.3' in p.lb_private_ips)
+        self.assertTrue('127.0.0.1' in p.lb_private_ips)
+        self.assertFalse('192.167.2.3' in p.lb_private_ips)
+
     def test_log_line_parser_query_args(self):
         p = access_processor.AccessLogProcessor({})
         log_line = [str(x) for x in range(18)]
