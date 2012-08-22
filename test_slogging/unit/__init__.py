@@ -10,7 +10,6 @@ from tempfile import NamedTemporaryFile
 from eventlet.green import socket
 from tempfile import mkdtemp
 from shutil import rmtree
-#from test import get_config
 from ConfigParser import MissingSectionHeaderError
 from StringIO import StringIO
 from swift.common.utils import readconf, TRUE_VALUES

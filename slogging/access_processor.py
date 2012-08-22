@@ -17,7 +17,18 @@ import collections
 from urllib import unquote
 import copy
 
-from iptools import IpRangeList
+# conditionalize the return_ips method based on whether or not iptools
+# is present in the system. Without iptools, you will lack CIDR support.
+try:
+    from iptools import IpRangeList
+
+    def return_ips(conf, conf_tag):
+        return IpRangeList(*[x.strip() for x in
+            conf.get(conf_tag, '').split(',') if x.strip()])
+except:
+    def return_ips(conf, conf_tag):
+        return ([x.strip() for x in conf.get(conf_tag, '').split(',')
+            if x.strip()])
 
 from swift.common.utils import split_path, get_logger
 
@@ -33,9 +44,7 @@ class AccessLogProcessor(object):
         self.server_name = conf.get('server_name', 'proxy-server')
         for conf_tag in ['lb_private_ips', 'service_ips',
                          'service_log_sources']:
-            setattr(self, conf_tag, IpRangeList(*
-                [x.strip() for x in conf.get(conf_tag, '').split(',') \
-                 if x.strip()]))
+            setattr(self, conf_tag, return_ips(conf, conf_tag))
         self.warn_percent = float(conf.get('warn_percent', '0.8'))
         self.logger = get_logger(conf, log_route='access-processor')
 
