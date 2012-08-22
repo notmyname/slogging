@@ -79,7 +79,7 @@ class TestAccessProcessor(unittest.TestCase):
                     'minute': '5', 'account': 'a', 'hour': '4',
                     'referrer': '9', 'request': '/v1/a/c/o',
                     'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3',
-                    'log_source': None,}
+                    'log_source': None}
         self.assertEquals(res, expected)
         # too many fields
         log_line = [str(x) for x in range(19)]
@@ -96,7 +96,7 @@ class TestAccessProcessor(unittest.TestCase):
                     'minute': '5', 'account': 'a', 'hour': '4',
                     'referrer': '9', 'request': '/v1/a/c/o',
                     'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3',
-                    'log_source': '18',}
+                    'log_source': '18'}
         self.assertEquals(res, expected)
 
 
