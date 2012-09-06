@@ -30,7 +30,7 @@ class TestAccessProcessor(unittest.TestCase):
             self.assertFalse('192.167.2.3' in p.lb_private_ips)
         else:
             from nose import SkipTest
-            return SkipTest("iptools for CIDR support not installed") 
+            raise SkipTest("iptools for CIDR support not installed") 
 
     def test_log_line_parser_query_args(self):
         p = access_processor.AccessLogProcessor({})
