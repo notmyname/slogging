@@ -21,11 +21,14 @@ import copy
 # is present in the system. Without iptools, you will lack CIDR support.
 try:
     from iptools import IpRangeList
+    CIDR_support = True
 
     def return_ips(conf, conf_tag):
         return IpRangeList(*[x.strip() for x in
             conf.get(conf_tag, '').split(',') if x.strip()])
-except:
+except ImportError:
+    CIDR_support = False
+
     def return_ips(conf, conf_tag):
         return ([x.strip() for x in conf.get(conf_tag, '').split(',')
             if x.strip()])
