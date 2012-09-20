@@ -19,7 +19,7 @@ from json import loads as json_loads
 import copy
 
 from slogging.compressing_file_reader import CompressingFileReader
-from swift.proxy.server import BaseApplication
+from swift.proxy.server import Application
 
 
 def make_request_body_file(source_file, compress=True):
@@ -55,7 +55,7 @@ class InternalProxy(object):
 
     def __init__(self, proxy_server_conf=None, logger=None, retries=0,
                  memcache=None):
-        self.upload_app = BaseApplication(proxy_server_conf, memcache=memcache,
+        self.upload_app = Application(proxy_server_conf, memcache=memcache,
                                           logger=logger)
         self.retries = retries
 

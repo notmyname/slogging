@@ -98,7 +98,7 @@ class TestLogProcessor(unittest.TestCase):
 
     def test_lazy_load_internal_proxy(self):
         # stub out internal_proxy's upload_app
-        internal_proxy.BaseApplication = FakeUploadApp
+        internal_proxy.Application = FakeUploadApp
         dummy_proxy_config = """[app:proxy-server]
 use = egg:swift#proxy
 """
