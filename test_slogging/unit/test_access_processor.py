@@ -21,6 +21,17 @@ from slogging import access_processor
 
 class TestAccessProcessor(unittest.TestCase):
 
+    def test_CIDR_works(self):
+        if access_processor.CIDR_support:
+            p = access_processor.AccessLogProcessor({'lb_private_ips':
+                                                    '127.0.0.1,192.168/16,10/24'})
+            self.assertTrue('192.168.2.3' in p.lb_private_ips)
+            self.assertTrue('127.0.0.1' in p.lb_private_ips)
+            self.assertFalse('192.167.2.3' in p.lb_private_ips)
+        else:
+            from nose import SkipTest
+            raise SkipTest("iptools for CIDR support not installed") 
+
     def test_log_line_parser_query_args(self):
         p = access_processor.AccessLogProcessor({})
         log_line = [str(x) for x in range(18)]
@@ -72,7 +83,7 @@ class TestAccessProcessor(unittest.TestCase):
                     'minute': '5', 'account': 'a', 'hour': '4',
                     'referrer': '9', 'request': '/v1/a/c/o',
                     'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3',
-                    'log_source': None,}
+                    'log_source': None}
         self.assertEquals(res, expected)
         # too many fields
         log_line = [str(x) for x in range(19)]
@@ -89,7 +100,7 @@ class TestAccessProcessor(unittest.TestCase):
                     'minute': '5', 'account': 'a', 'hour': '4',
                     'referrer': '9', 'request': '/v1/a/c/o',
                     'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3',
-                    'log_source': '18',}
+                    'log_source': '18'}
         self.assertEquals(res, expected)
 
 

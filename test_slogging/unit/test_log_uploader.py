@@ -23,7 +23,7 @@ from collections import defaultdict
 import random
 import string
 
-from test.unit import temptree
+from test_slogging.unit import temptree
 from slogging import log_uploader
 
 import logging

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import unittest
-from test.unit import tmpfile
+from test_slogging.unit import tmpfile
 import Queue
 import datetime
 import hashlib
