@@ -37,8 +37,13 @@ class TestAccessProcessor(unittest.TestCase):
             p = access_processor.AccessLogProcessor({'lb_private_ips':
                                                     '127.0.0.1,192.168/16,10/24',
                                                     'server_name':'testsrv'})
-            line = 'Sep 16 20:00:02 heaven.internapcloud.net testsrv 199.115.119.21 - 16/Sep/2012/20/00/02 GET /v1/YajXJuDj0qGrn7bWkqFXfsus/abv/thumbnail/purple.jpg HTTP/1.0 200 - None%20StaticWeb - - 17005 - txb198527c52f5461799e85eaf87e81759 - 0.0095 -'
-            stream = [line]
+            srv = 'heaven.internapcloud.net'
+            obj = '/v1/YajXJuDj0qGrn7bWkqFXfsus/abv/thumbnail/purple.jpg'
+            txn = 'txb198527c52f5461799e85eaf87e81759'
+            line = 'Sep 16 20:00:02 ',srv,' testsrv ', \
+                   '199.115.119.21 - 16/Sep/2012/20/00/02 GET ',obj, \
+                   ' HTTP/1.0 200 - StaticWeb - - 17005 - ',txn,' - 0.0095 -'
+            stream = ["".join(line)]
             res = p.process(stream, 'dao', 'dac', 'don')
             self.assertEquals(res.keys()[0][0], 'YajXJuDj0qGrn7bWkqFXfsus')
         else:
