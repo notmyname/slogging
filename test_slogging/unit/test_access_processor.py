@@ -32,6 +32,19 @@ class TestAccessProcessor(unittest.TestCase):
             from nose import SkipTest
             raise SkipTest("iptools for CIDR support not installed") 
 
+    def test_CIDR_process_logs_with_missing_ip(self):
+        if access_processor.CIDR_support:
+            p = access_processor.AccessLogProcessor({'lb_private_ips':
+                                                    '127.0.0.1,192.168/16,10/24',
+                                                    'server_name':'testsrv'})
+            line = 'Sep 16 20:00:02 heaven.internapcloud.net testsrv 199.115.119.21 - 16/Sep/2012/20/00/02 GET /v1/YajXJuDj0qGrn7bWkqFXfsus/abv/thumbnail/purple.jpg HTTP/1.0 200 - None%20StaticWeb - - 17005 - txb198527c52f5461799e85eaf87e81759 - 0.0095 -'
+            stream = [line]
+            res = p.process(stream, 'dao', 'dac', 'don')
+            self.assertEquals(res.keys()[0][0], 'YajXJuDj0qGrn7bWkqFXfsus')
+        else:
+            from nose import SkipTest
+            raise SkipTest("iptools for CIDR support not installed") 
+
     def test_log_line_parser_query_args(self):
         p = access_processor.AccessLogProcessor({})
         log_line = [str(x) for x in range(18)]
