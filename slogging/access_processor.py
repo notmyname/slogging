@@ -26,6 +26,10 @@ try:
     def return_ips(conf, conf_tag):
         return IpRangeList(*[x.strip() for x in
             conf.get(conf_tag, '').split(',') if x.strip()])
+    def sanitize_ips(line_data):
+        for x in ['lb_ip', 'client_ip', 'log_source']:
+            if line_data[x] == '-':
+                line_data[x] = '0.0.0.0'
 except ImportError:
     CIDR_support = False
 
@@ -184,6 +188,8 @@ class AccessLogProcessor(object):
 
             aggr_key = (account, year, month, day, hour)
             d = hourly_aggr_info.get(aggr_key, {})
+            if CIDR_support:
+                sanitize_ips(line_data)
             if line_data['lb_ip'] in self.lb_private_ips or \
                     line_data['client_ip'] in self.service_ips or \
                     line_data['log_source'] in self.service_log_sources:
