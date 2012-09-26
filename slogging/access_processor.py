@@ -24,8 +24,9 @@ try:
     CIDR_support = True
 
     def return_ips(conf, conf_tag):
-        return IpRangeList(*[x.strip() for x in
-            conf.get(conf_tag, '').split(',') if x.strip()])
+        return dict((k, 1) for k in
+                    IpRangeList(*[x.strip() for x in
+                    conf.get(conf_tag, '').split(',') if x.strip()]))
     def sanitize_ips(line_data):
         for x in ['lb_ip', 'client_ip', 'log_source']:
             if line_data[x] == '-':
