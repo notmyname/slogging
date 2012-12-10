@@ -43,6 +43,6 @@ setup(
     scripts=['bin/swift-account-stats-logger',
              'bin/swift-container-stats-logger',
              'bin/swift-log-stats-collector', 'bin/swift-log-uploader',
-             'bin/swift-access-log-delivery'
+             'bin/swift-access-log-delivery-server'
         ],
     )

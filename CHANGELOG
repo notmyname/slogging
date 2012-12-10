@@ -1,3 +1,8 @@
+slogging (1.1.9)
+
+  - Fixed problems with access log delivery.
+  - Allow for running stats processing plugins separately
+
 slogging (1.1.8)
 
   - added metadata to objects when they are uploaded by log-uploader

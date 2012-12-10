@@ -8,7 +8,7 @@ swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
 # lookback_window = 120
 # user = swift
 # processed_files_object_name = processed_files.pickle.gz
-# frequency = 3600
+# run_frequency = 3600
 # target_container = .ACCESS_LOGS
 log_source_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
 # log_source_container_name = log_data
@@ -19,3 +19,15 @@ log_source_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
 # working_dir = /tmp/swift
 # hidden_ips is a list of IPs (comma separated) that are masked in delivered logs
 # hidden_ips =
+# 0 means to process all logs found
+# logs_to_process_per_run = 0
+# service_log_sources is a list of services to not deliver log lines for (like SOS)
+# service_log_sources =
+# how often to log progress when processing an object
+# log_line_count = 250000
+# prevents more than one instance of access lgo delivery from running at once
+# lock_file = /var/run/swift/swift-access-log-delivery.lock
+# lock_sleep is in seconds
+# it's how long to sleep before trying to get the run lock after a failure
+#     to get it
+# lock_sleep = 10

@@ -16,8 +16,9 @@
 import collections
 from urllib import unquote
 import copy
+import time
 
-from swift.common.utils import split_path, get_logger
+from swift.common.utils import split_path
 
 month_map = '_ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()
 LISTING_PARAMS = set(
@@ -27,7 +28,7 @@ LISTING_PARAMS = set(
 class AccessLogProcessor(object):
     """Transform proxy server access logs"""
 
-    def __init__(self, conf):
+    def __init__(self, conf, logger=None):
         self.server_name = conf.get('server_name', 'proxy-server')
         for conf_tag in ['lb_private_ips', 'service_ips',
                          'service_log_sources']:
@@ -35,7 +36,7 @@ class AccessLogProcessor(object):
                 [x.strip() for x in conf.get(conf_tag, '').split(',') \
                  if x.strip()])
         self.warn_percent = float(conf.get('warn_percent', '0.8'))
-        self.logger = get_logger(conf, log_route='access-processor')
+        self.logger = logger
 
     def log_line_parser(self, raw_log):
         '''given a raw access log line, return a dict of the good parts'''
@@ -64,11 +65,13 @@ class AccessLogProcessor(object):
             if len(split_log) > 18:
                 log_source = split_log[18]
         except ValueError:
-            self.logger.debug(_('Bad line data: %s') % repr(raw_log))
+            if self.logger:
+                self.logger.debug(_('Bad line data: %s') % repr(raw_log))
             return {}
         if server != self.server_name:
             # incorrect server name in log line
-            self.logger.debug(_('Bad server name: found "%(found)s" ' \
+            if self.logger:
+                self.logger.debug(_('Bad server name: found "%(found)s" ' \
                     'expected "%(expected)s"') %
                     {'found': server, 'expected': self.server_name})
             return {}
@@ -76,8 +79,9 @@ class AccessLogProcessor(object):
             (version, account, container_name, object_name) = \
                 split_path(request, 2, 4, True)
         except ValueError, e:
-            self.logger.debug(_('Invalid path: %(error)s from data: %(log)s') %
-            {'error': e, 'log': repr(raw_log)})
+            if self.logger:
+                self.logger.debug(_('Invalid path: %(error)s from data: '
+                    '%(log)s') % {'error': e, 'log': repr(raw_log)})
             return {}
         if container_name is not None:
             container_name = container_name.split('?', 1)[0]
@@ -129,9 +133,15 @@ class AccessLogProcessor(object):
         d['account'] = account
         d['container_name'] = container_name
         d['object_name'] = object_name
-        d['bytes_out'] = int(d['bytes_out'].replace('-', '0'))
-        d['bytes_in'] = int(d['bytes_in'].replace('-', '0'))
-        d['code'] = int(d['code'])
+        try:
+            d['bytes_out'] = int(d['bytes_out'].replace('-', '0'))
+            d['bytes_in'] = int(d['bytes_in'].replace('-', '0'))
+            d['code'] = int(d['code'])
+        except ValueError:
+            if self.logger:
+                self.logger.debug(_('Bad http status code: %s') %
+                    repr(raw_log))
+            return {}
         d['log_source'] = log_source
         return d
 
@@ -141,12 +151,15 @@ class AccessLogProcessor(object):
         hourly_aggr_info = {}
         total_lines = 0
         bad_lines = 0
+        start_time = time.time()
+        line_count = 0
         for line in obj_stream:
             line_data = self.log_line_parser(line)
             total_lines += 1
             if not line_data:
                 bad_lines += 1
                 continue
+            line_count += 1
             account = line_data['account']
             container_name = line_data['container_name']
             year = line_data['year']
@@ -201,9 +214,15 @@ class AccessLogProcessor(object):
         if bad_lines > (total_lines * self.warn_percent):
             name = '/'.join([data_object_account, data_object_container,
                              data_object_name])
-            self.logger.warning(_('I found a bunch of bad lines in %(name)s '\
-                    '(%(bad)d bad, %(total)d total)') %
+            if self.logger:
+                self.logger.warning(_('I found a bunch of bad lines in '
+                    '%(name)s (%(bad)d bad, %(total)d total)') %
                     {'name': name, 'bad': bad_lines, 'total': total_lines})
+        processing_time = time.time() - start_time
+        if self.logger:
+            self.logger.info('Processed %d lines in %.1f seconds '
+                '(%.1f per sec)' % (line_count, processing_time,
+                line_count / processing_time))
         return hourly_aggr_info
 
     def keylist_mapping(self):

@@ -52,7 +52,7 @@ class LogProcessor(LogProcessorCommon):
             import_target, class_name = class_path.rsplit('.', 1)
             module = __import__(import_target, fromlist=[import_target])
             klass = getattr(module, class_name)
-            self.plugins[plugin_name]['instance'] = klass(plugin_conf)
+            self.plugins[plugin_name]['instance'] = klass(plugin_conf, logger)
             self.logger.debug(_('Loaded plugin "%s"') % plugin_name)
 
     def process_one_file(self, plugin_name, account, container, object_name):
@@ -123,7 +123,8 @@ class LogProcessorDaemon(Daemon):
         c = conf.get('log-processor')
         super(LogProcessorDaemon, self).__init__(c)
         self.total_conf = conf
-        self.logger = get_logger(c, log_route='log-processor')
+        self.logger = get_logger(c, log_route =
+            c.get('log_route', 'log_processor'))
         self.log_processor = LogProcessor(conf, self.logger)
         self.lookback_hours = int(c.get('lookback_hours', '120'))
         self.lookback_window = int(c.get('lookback_window',
@@ -133,7 +134,10 @@ class LogProcessorDaemon(Daemon):
                                              'log_processing_data')
         self.worker_count = int(c.get('worker_count', '1'))
         self._keylist_mapping = None
-        self.processed_files_filename = 'processed_files.pickle.gz'
+        self.processed_files_filename = c.get('processed_files_filename',
+            'processed_files.pickle.gz')
+        # 0 means to process all the logs found
+        self.logs_to_process_per_run = int(c.get('logs_to_process_per_run', 0))
 
     def get_lookback_interval(self):
         """
@@ -284,6 +288,10 @@ class LogProcessorDaemon(Daemon):
 
         s = cPickle.dumps(processed_files, cPickle.HIGHEST_PROTOCOL)
         f = cStringIO.StringIO(s)
+        self.logger.info('store processed files list: %s %s %s' % (
+            self.log_processor_account,
+            self.log_processor_container,
+            self.processed_files_filename))
         self.log_processor.internal_proxy.upload_file(f,
             self.log_processor_account,
             self.log_processor_container,
@@ -326,6 +334,10 @@ class LogProcessorDaemon(Daemon):
         h = hashlib.md5(out_buf).hexdigest()
         upload_name = time.strftime('%Y/%m/%d/%H/') + '%s.csv.gz' % h
         f = cStringIO.StringIO(out_buf)
+        self.logger.info('store output: %s %s %s' % (
+            self.log_processor_account,
+            self.log_processor_container,
+            upload_name))
         self.log_processor.internal_proxy.upload_file(f,
             self.log_processor_account,
             self.log_processor_container,
@@ -362,22 +374,26 @@ class LogProcessorDaemon(Daemon):
         """
 
         # map
+        self.logger.info('map')
         processor_args = (self.total_conf, self.logger)
         results = multiprocess_collate(LogProcessor, processor_args,
                                        'process_one_file', logs_to_process,
                                        self.worker_count)
 
         # reduce
+        self.logger.info('reduce')
         aggr_data = self.get_aggregate_data(processed_files, results)
         del results
 
         # group
+        self.logger.info('group')
         # reduce a large number of keys in aggr_data[k] to a small
         # number of output keys
         final_info = self.get_final_info(aggr_data)
         del aggr_data
 
         # output
+        self.logger.info('output')
         return self.get_output(final_info)
 
     def run_once(self, *args, **kwargs):
@@ -410,6 +426,8 @@ class LogProcessorDaemon(Daemon):
 
         logs_to_process = self.log_processor.get_data_list(lookback_start,
             lookback_end, processed_files)
+        if self.logs_to_process_per_run:
+            logs_to_process = logs_to_process[:self.logs_to_process_per_run]
         self.logger.info(_('loaded %d files to process') %
             len(logs_to_process))
 

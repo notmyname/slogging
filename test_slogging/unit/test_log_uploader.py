@@ -174,9 +174,6 @@ class TestLogUploader(unittest.TestCase):
             }
             files.append(fname)
 
-        for fname in files:
-            print fname
-
         with temptree(files, contents=[COMPRESSED_DATA] * len(files)) as t:
             self.assertEquals(len(os.listdir(t)), 48)
             conf = {'source_filename_pattern': pattern, 'log_dir': t}

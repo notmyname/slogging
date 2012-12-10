@@ -49,9 +49,11 @@ class WorkerError(Exception):
 
 class LogProcessorCommon(object):
 
-    def __init__(self, conf, logger, log_route='log-processor'):
+    def __init__(self, conf, logger=None, log_route='log-processor'):
         if isinstance(logger, tuple):
             self.logger = get_logger(*logger, log_route=log_route)
+        elif logger is None:
+            self.logger = get_logger(conf, log_route=log_route)
         else:
             self.logger = logger
         self.memcache = MemcacheRing([s.strip() for s in
@@ -254,11 +256,15 @@ def multiprocess_collate(processor_klass, processor_args, processor_method,
     for _junk in range(worker_count):
         in_queue.put(None)  # tell the worker to end
     in_queue.close()
+    sleep_count = 0
     while True:
         try:
             item, data = out_queue.get_nowait()
         except Queue.Empty:
-            sleep(.01)
+            sleep_count += 1
+            if sleep_count % 60 == 0 and logger:
+                logger.info('Waiting for results')
+            sleep(1)
         except Exception:
             if logger:
                 logger.exception('error reading from out queue')
@@ -289,7 +295,7 @@ def collate_worker(processor_klass, processor_args, processor_method, in_queue,
                 return
             try:
                 ret = method(*item)
-            except:
+            except Exception:
                 err_type, err, tb = sys.exc_info()
                 # Use err_type since unplickling err in the parent process
                 # will fail if it has a custom constructor with required

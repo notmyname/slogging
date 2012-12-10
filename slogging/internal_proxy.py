@@ -19,7 +19,7 @@ from json import loads as json_loads
 import copy
 
 from slogging.compressing_file_reader import CompressingFileReader
-from swift.proxy.server import BaseApplication
+from swift.proxy.server import Application
 
 
 def make_request_body_file(source_file, compress=True):
@@ -55,7 +55,7 @@ class InternalProxy(object):
 
     def __init__(self, proxy_server_conf=None, logger=None, retries=0,
                  memcache=None):
-        self.upload_app = BaseApplication(proxy_server_conf, memcache=memcache,
+        self.upload_app = Application(proxy_server_conf, memcache=memcache,
                                           logger=logger)
         self.retries = retries
 
@@ -73,6 +73,26 @@ class InternalProxy(object):
             tries += 1
         return resp
 
+    def make_path(self, account, container=None, object_=None):
+        if isinstance(account, unicode):
+            account = account.encode('utf-8')
+
+        if isinstance(container, unicode):
+            container = container.encode('utf-8')
+
+        if isinstance(object_, unicode):
+            object_ = object_.encode('utf-8')
+
+        path = '/v1/%s' % (quote(account))
+        if container:
+            path += '/%s' % (quote(container))
+
+            if object_:
+                path += '/%s' % (quote(object_))
+        elif object_:
+            raise ValueError('Object specified without container')
+        return path
+
     def upload_file(self, source_file, account, container, object_name,
                     compress=True, content_type='application/x-gzip',
                     etag=None, headers=None):
@@ -88,8 +108,6 @@ class InternalProxy(object):
         :param etag: etag for object to check successful upload
         :returns: True if successful, False otherwise
         """
-        target_name = '/v1/%s/%s/%s' % (account, container, object_name)
-
         # create the container
         if not self.create_container(account, container):
             return False
@@ -99,9 +117,11 @@ class InternalProxy(object):
             send_headers.update(headers)
 
         # upload the file to the account
-        req = webob.Request.blank(target_name, content_type=content_type,
-                            environ={'REQUEST_METHOD': 'PUT'},
-                            headers=send_headers)
+        req = webob.Request.blank(
+                  self.make_path(account, container, object_name),
+                  content_type=content_type,
+                  environ={'REQUEST_METHOD': 'PUT'},
+                  headers=send_headers)
         req.content_length = None   # to make sure we send chunked data
         if etag:
             req.headers['etag'] = etag
@@ -120,9 +140,9 @@ class InternalProxy(object):
         :param object_name: name of object to get
         :returns: iterator for object data
         """
-        req = webob.Request.blank('/v1/%s/%s/%s' %
-                            (account, container, object_name),
-                            environ={'REQUEST_METHOD': 'GET'})
+        req = webob.Request.blank(
+                  self.make_path(account, container, object_name),
+                  environ={'REQUEST_METHOD': 'GET'})
         resp = self._handle_request(req)
         return resp.status_int, resp.app_iter
 
@@ -134,8 +154,9 @@ class InternalProxy(object):
         :param container: container name to create
         :returns: True if successful, otherwise False
         """
-        req = webob.Request.blank('/v1/%s/%s' % (account, container),
-                            environ={'REQUEST_METHOD': 'PUT'})
+        req = webob.Request.blank(
+                  self.make_path(account, container),
+                  environ={'REQUEST_METHOD': 'PUT'})
         resp = self._handle_request(req)
         return 200 <= resp.status_int < 300
 
@@ -172,7 +193,7 @@ class InternalProxy(object):
                                                   delimiter,
                                                   full_listing=False)
             return rv
-        path = '/v1/%s/%s' % (account, quote(container))
+        path = self.make_path(account, container)
         qs = 'format=json'
         if marker:
             qs += '&marker=%s' % quote(marker)
@@ -194,8 +215,9 @@ class InternalProxy(object):
         return json_loads(resp.body)
 
     def get_container_metadata(self, account, container):
-        path = '/v1/%s/%s/' % (account, container)
-        req = webob.Request.blank(path, environ={'REQUEST_METHOD': 'HEAD'})
+        req = webob.Request.blank(
+                  self.make_path(account, container),
+                  environ={'REQUEST_METHOD': 'HEAD'})
         resp = self._handle_request(req)
         out = {}
         for k, v in resp.headers.iteritems():

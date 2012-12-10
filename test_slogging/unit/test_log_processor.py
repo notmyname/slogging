@@ -509,6 +509,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
                 self.log_processor_account = 'account'
                 self.log_processor_container = 'container'
                 self.processed_files_filename = 'filename'
+                self.logger = DumbLogger()
 
         processed_files = set(['a', 'b', 'c'])
         MockLogProcessorDaemon(self, processed_files).\
@@ -594,6 +595,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
                     self.log_processor_account = 'account'
                     self.log_processor_container = 'container'
                     self.processed_files_filename = 'filename'
+                    self.logger = DumbLogger()
 
             MockLogProcessorDaemon(self, expected_filename, expected_output).\
                 store_output(data_in)
@@ -642,7 +644,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
                 def __init__(self, test):
                     self.test = test
                     self.total_conf = 'total_conf'
-                    self.logger = 'logger'
+                    self.logger = DumbLogger()
                     self.worker_count = 'worker_count'
 
                 def get_aggregate_data(self, processed_files, results):
@@ -724,6 +726,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
                 self.lookback_start = 'lookback_start'
                 self.lookback_end = 'lookback_end'
                 self.processed_files = ['a', 'b', 'c']
+                self.logs_to_process_per_run = 0
 
             def get_lookback_interval(self):
                 return self.lookback_start, self.lookback_end

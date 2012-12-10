@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# TODO: Tests
-
 import unittest
 import webob
 import tempfile
@@ -23,14 +21,14 @@ import json
 from slogging import internal_proxy
 
 
-class DumbBaseApplicationFactory(object):
+class DumbApplicationFactory(object):
 
     def __init__(self, status_codes, body=''):
         self.status_codes = status_codes[:]
         self.body = body
 
     def __call__(self, *a, **kw):
-        app = DumbBaseApplication(*a, **kw)
+        app = DumbApplication(*a, **kw)
         app.status_codes = self.status_codes
         try:
             app.default_status_code = self.status_codes[-1]
@@ -40,7 +38,7 @@ class DumbBaseApplicationFactory(object):
         return app
 
 
-class DumbBaseApplication(object):
+class DumbApplication(object):
 
     def __init__(self, *a, **kw):
         self.status_codes = []
@@ -83,7 +81,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_handle_request(self):
         status_codes = [200]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy()
         req = webob.Request.blank('/')
@@ -93,7 +91,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_handle_request_with_retries(self):
         status_codes = [500, 200]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy(retries=3)
         req = webob.Request.blank('/')
@@ -105,7 +103,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_get_object(self):
         status_codes = [200]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy()
         code, body = p.get_object('a', 'c', 'o')
@@ -115,7 +113,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_create_container(self):
         status_codes = [200]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy()
         resp = p.create_container('a', 'c')
@@ -123,7 +121,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_handle_request_with_retries_all_error(self):
         status_codes = [500, 500, 500, 500, 500]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy(retries=3)
         req = webob.Request.blank('/')
@@ -135,7 +133,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_get_container_list_empty(self):
         status_codes = [200]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes, body='[]')
         p = internal_proxy.InternalProxy()
         resp = p.get_container_list('a', 'c')
@@ -143,7 +141,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_get_container_list_no_body(self):
         status_codes = [204]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes, body='')
         p = internal_proxy.InternalProxy()
         resp = p.get_container_list('a', 'c')
@@ -156,7 +154,7 @@ class TestInternalProxy(unittest.TestCase):
         obj_b = dict(name='bar', hash='bar', bytes=3,
                      content_type='text/plain', last_modified='2011/01/01')
         body = [json.dumps([obj_a]), json.dumps([obj_b]), json.dumps([])]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes, body=body)
         p = internal_proxy.InternalProxy()
         resp = p.get_container_list('a', 'c')
@@ -165,7 +163,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_get_container_list_full(self):
         status_codes = [204]
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes, body='')
         p = internal_proxy.InternalProxy()
         resp = p.get_container_list('a', 'c', marker='a', end_marker='b',
@@ -174,7 +172,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_upload_file(self):
         status_codes = [200, 200]  # container PUT + object PUT
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy()
         with tempfile.NamedTemporaryFile() as file_obj:
@@ -183,7 +181,7 @@ class TestInternalProxy(unittest.TestCase):
 
     def test_upload_file_with_retries(self):
         status_codes = [200, 500, 200]  # container PUT + error + object PUT
-        internal_proxy.BaseApplication = DumbBaseApplicationFactory(
+        internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy(retries=3)
         with tempfile.NamedTemporaryFile() as file_obj:

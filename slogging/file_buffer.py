@@ -1,3 +1,4 @@
+import errno
 import os
 import collections
 from swift.common.utils import lock_file
@@ -10,6 +11,9 @@ class FileBuffer(object):
         self.limit = limit
         self.logger = logger
         self.total_size = 0
+
+    def exists(self, filename):
+        return filename in self.buffers
 
     def write(self, filename, data):
         self.buffers[filename].append(data)

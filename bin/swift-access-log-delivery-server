@@ -14,12 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from optparse import OptionParser
+
 from slogging.access_log_delivery import AccessLogDeliveryDaemon
-from swift.common.utils import parse_options
-from swift.common.daemon import run_daemon
+from swift.common.utils import parse_options, readconf
+
 
 if __name__ == '__main__':
-    conf_file, options = parse_options(once=True)
-    run_daemon(AccessLogDeliveryDaemon, conf_file,
-               section_name='access-log-delivery',
-               log_name='access-log-delivery', **options)
+    parser = OptionParser('Usage: %prog CONFIG_FILE')
+    parser.add_option('-o', '--once', action='store_true', dest='once',
+                      default=False, help='Run daemon once')
+    conf_file, options = parse_options(parser=parser)
+    conf = readconf(conf_file, 'access-log-delivery')
+
+    daemon = AccessLogDeliveryDaemon(conf)
+    daemon.run(once=options['once'])
