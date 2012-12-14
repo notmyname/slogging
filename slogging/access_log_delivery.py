@@ -307,7 +307,10 @@ class AccessLogDeliveryDaemon(Daemon):
     def run_forever(self, *a, **kw):
         while True:
             start_time = time.time()
-            self.run_once()
+            try:
+                self.run_once()
+            except Exception:
+                self.logger.exception('Run once failed')
             end_time = time.time()
             # don't run more than once every self.frequency seconds
             sleep_time = self.frequency - (end_time - start_time)
