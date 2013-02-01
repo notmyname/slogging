@@ -8,4 +8,10 @@ and account stats), but it can be extended to handle other types of logs.
 How to Build to Debian Packages
 ===============================
 
+Make sure you have python-stdeb installed first:
+
+    sudo apt-get install python-stdeb
+
+then:
+
     python setup.py --command-packages=stdeb.command bdist_deb
