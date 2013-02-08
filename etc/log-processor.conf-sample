@@ -33,7 +33,6 @@ class_path = slogging.access_processor.AccessLogProcessor
 # warn_percent = 0.8
 # list of swift.sources (see swift/proxy/server.py posthooklogger)
 # that count as service traffic
-# service_log_sources =
 # content_type =
 
 [log-processor-stats]

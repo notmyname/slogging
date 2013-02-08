@@ -50,8 +50,7 @@ class AccessLogProcessor(object):
 
     def __init__(self, conf):
         self.server_name = conf.get('server_name', 'proxy-server')
-        for conf_tag in ['lb_private_ips', 'service_ips',
-                         'service_log_sources']:
+        for conf_tag in ['lb_private_ips', 'service_ips']:
             setattr(self, conf_tag, return_ips(conf, conf_tag))
         self.warn_percent = float(conf.get('warn_percent', '0.8'))
         self.logger = get_logger(conf, log_route='access-processor')
@@ -193,7 +192,7 @@ class AccessLogProcessor(object):
                 sanitize_ips(line_data)
             if line_data['lb_ip'] in self.lb_private_ips or \
                     line_data['client_ip'] in self.service_ips or \
-                    line_data['log_source'] in self.service_log_sources:
+                    line_data['log_source'] != '-':
                 source = 'service'
             else:
                 source = 'public'
