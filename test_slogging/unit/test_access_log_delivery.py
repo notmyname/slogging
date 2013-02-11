@@ -147,15 +147,8 @@ class TestAccessLogDelivery(unittest.TestCase):
         log_line[6] = '/v1/a/c/o'
         log_line = 'x' * 16 + ' '.join(log_line)
         res = p.log_line_parser(log_line)
-        expected = {'code': 8, 'processing_time': '17', 'auth_token': '11',
-                    'month': '01', 'second': '6', 'year': '3', 'tz': '+0000',
-                    'http_version': '7', 'object_name': 'o', 'etag': '14',
-                    'method': '5', 'trans_id': '15', 'client_ip': '2',
-                    'bytes_out': 13, 'container_name': 'c', 'day': '1',
-                    'minute': '5', 'account': 'a', 'hour': '4',
-                    'referrer': '9', 'request': '/v1/a/c/o',
-                    'user_agent': '10', 'bytes_in': 12, 'lb_ip': '3'}
-        self.assertEquals(res, expected)
+        # throws away invalid log lines
+        self.assertEquals(res, {})
 
     def test_make_clf_from_parts(self):
         p = access_log_delivery.AccessLogDelivery(self.conf, DumbLogger())

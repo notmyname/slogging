@@ -192,7 +192,7 @@ class AccessLogProcessor(object):
                 sanitize_ips(line_data)
             if line_data['lb_ip'] in self.lb_private_ips or \
                     line_data['client_ip'] in self.service_ips or \
-                    line_data['log_source'] != '-':
+                    line_data['log_source'] not in ['-', None]:
                 source = 'service'
             else:
                 source = 'public'
