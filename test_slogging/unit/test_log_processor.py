@@ -167,7 +167,7 @@ use = egg:swift#proxy
            'user_agent': 'curl',
            'bytes_in': 6,
            'lb_ip': '4.5.6.7',
-            'log_source': None})
+           'log_source': None})
 
     def test_process_one_access_file(self):
         access_proxy_config = self.proxy_config.copy()
@@ -736,3 +736,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
                     'Method should not be called'
 
         MockLogProcessorDaemon(self).run_once()
+
+
+if __name__ == '__main__':
+    unittest.main()
