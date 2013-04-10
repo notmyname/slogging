@@ -144,6 +144,8 @@ class AccessLogDelivery(LogProcessorCommon):
 
     def convert_log_line(self, raw_log):
         parts = self.log_line_parser(raw_log)
+        if parts == {}:
+            return None, None, None
         return (make_clf_from_parts(parts),
                 parts.get('account'),
                 parts.get('container_name'))
@@ -152,6 +154,12 @@ class AccessLogDelivery(LogProcessorCommon):
         '''given a raw access log line, return a dict of the good parts'''
         d = {}
         try:
+            log_arr = raw_log[16:].split(' ')
+            if len(log_arr) > 18:
+                log_source = log_arr[18]
+                if log_source != '-':
+                    # internal proxy log
+                    return {}
             (unused,
             server,
             client_ip,
@@ -169,8 +177,7 @@ class AccessLogDelivery(LogProcessorCommon):
             etag,
             trans_id,
             headers,
-            processing_time) = (unquote(x) for x in
-                                raw_log[16:].split(' ')[:18])
+            processing_time) = (unquote(x) for x in log_arr[:18])
         except ValueError:
             self.logger.debug(_('Bad line data: %s') % repr(raw_log))
             return {}
@@ -307,7 +314,10 @@ class AccessLogDeliveryDaemon(Daemon):
     def run_forever(self, *a, **kw):
         while True:
             start_time = time.time()
-            self.run_once()
+            try:
+                self.run_once()
+            except Exception:
+                self.logger.exception('Run once failed')
             end_time = time.time()
             # don't run more than once every self.frequency seconds
             sleep_time = self.frequency - (end_time - start_time)
