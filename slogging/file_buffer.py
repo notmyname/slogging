@@ -1,5 +1,6 @@
 import os
 import collections
+import errno
 from swift.common.utils import lock_file
 
 
