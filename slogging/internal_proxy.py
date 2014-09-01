@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import webob
 from urllib import quote, unquote
 from json import loads as json_loads
 import copy
 
 from slogging.compressing_file_reader import CompressingFileReader
 from swift.proxy.server import Application
+from swift.common import swob
 
 
 def make_request_body_file(source_file, compress=True):
@@ -33,8 +33,8 @@ def make_request_body_file(source_file, compress=True):
     return source_file
 
 
-def webob_request_copy(orig_req, source_file=None, compress=True):
-    req_copy = orig_req.copy()
+def swob_request_copy(orig_req, source_file=None, compress=True):
+    req_copy = swob.Request(orig_req.environ.copy())
     req_copy.headers = dict(orig_req.headers)
     if source_file:
         req_copy.body_file = make_request_body_file(source_file,
@@ -61,14 +61,15 @@ class InternalProxy(object):
 
     def _handle_request(self, req, source_file=None, compress=True):
         req = self.upload_app.update_request(req)
-        req_copy = webob_request_copy(req, source_file=source_file,
-                                      compress=compress)
+        req_copy = swob_request_copy(req, source_file=source_file,
+                                     compress=compress)
+        req_copy.headers['transfer-encoding'] = 'chunked'
         resp = self.upload_app.handle_request(req_copy)
         tries = 1
         while (resp.status_int < 200 or resp.status_int > 299) \
                 and tries < self.retries:
-            req_copy = webob_request_copy(req, source_file=source_file,
-                                          compress=compress)
+            req_copy = swob_request_copy(req, source_file=source_file,
+                                         compress=compress)
             resp = self.upload_app.handle_request(req_copy)
             tries += 1
         return resp
@@ -99,9 +100,10 @@ class InternalProxy(object):
             send_headers.update(headers)
 
         # upload the file to the account
-        req = webob.Request.blank(target_name, content_type=content_type,
+        req = swob.Request.blank(target_name,
                             environ={'REQUEST_METHOD': 'PUT'},
                             headers=send_headers)
+        req.environ['content_type'] = content_type
         req.content_length = None   # to make sure we send chunked data
         if etag:
             req.headers['etag'] = etag
@@ -120,7 +122,7 @@ class InternalProxy(object):
         :param object_name: name of object to get
         :returns: iterator for object data
         """
-        req = webob.Request.blank('/v1/%s/%s/%s' %
+        req = swob.Request.blank('/v1/%s/%s/%s' %
                             (account, container, object_name),
                             environ={'REQUEST_METHOD': 'GET'})
         resp = self._handle_request(req)
@@ -134,7 +136,7 @@ class InternalProxy(object):
         :param container: container name to create
         :returns: True if successful, otherwise False
         """
-        req = webob.Request.blank('/v1/%s/%s' % (account, container),
+        req = swob.Request.blank('/v1/%s/%s' % (account, container),
                             environ={'REQUEST_METHOD': 'PUT'})
         resp = self._handle_request(req)
         return 200 <= resp.status_int < 300
@@ -185,7 +187,7 @@ class InternalProxy(object):
         if delimiter:
             qs += '&delimiter=%s' % quote(delimiter)
         path += '?%s' % qs
-        req = webob.Request.blank(path, environ={'REQUEST_METHOD': 'GET'})
+        req = swob.Request.blank(path, environ={'REQUEST_METHOD': 'GET'})
         resp = self._handle_request(req)
         if resp.status_int < 200 or resp.status_int >= 300:
             return []  # TODO: distinguish between 404 and empty container
@@ -195,7 +197,7 @@ class InternalProxy(object):
 
     def get_container_metadata(self, account, container):
         path = '/v1/%s/%s/' % (account, container)
-        req = webob.Request.blank(path, environ={'REQUEST_METHOD': 'HEAD'})
+        req = swob.Request.blank(path, environ={'REQUEST_METHOD': 'HEAD'})
         resp = self._handle_request(req)
         out = {}
         for k, v in resp.headers.iteritems():
