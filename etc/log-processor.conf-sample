@@ -9,6 +9,7 @@ swift_account = AUTH_test
 # lookback_hours = 120
 # lookback_window = 120
 # user = swift
+# format_type = csv
 
 [log-processor-access]
 # log_dir = /var/log/swift/
