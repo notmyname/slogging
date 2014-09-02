@@ -10,6 +10,7 @@ swift_account = AUTH_test
 # lookback_window = 120
 # user = swift
 # format_type = csv
+# time_zone = UTC
 
 [log-processor-access]
 # log_dir = /var/log/swift/
@@ -35,6 +36,7 @@ class_path = slogging.access_processor.AccessLogProcessor
 # list of swift.sources (see swift/proxy/server.py posthooklogger)
 # that count as service traffic
 # content_type =
+# time_zone = UTC
 
 [log-processor-stats]
 # log_dir = /var/log/swift/
@@ -47,6 +49,7 @@ class_path = slogging.stats_processor.StatsLogProcessor
 # mount_check = true
 # user = swift
 # content_type =
+# time_zone = UTC
 
 [log-processor-container-stats]
 # log_dir = /var/log/swift/
@@ -61,3 +64,4 @@ processable = false
 # user = swift
 # metadata_keys = comma separated list of user metadata keys to be collected
 # content_type =
+# time_zone = UTC

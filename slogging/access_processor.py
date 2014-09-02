@@ -16,6 +16,10 @@
 import collections
 from urllib import unquote
 import copy
+from tzlocal import get_localzone
+from datetime import datetime
+from slogging import common
+import pytz
 
 # conditionalize the return_ips method based on whether or not iptools
 # is present in the system. Without iptools, you will lack CIDR support.
@@ -43,6 +47,7 @@ from swift.common.utils import split_path, get_logger
 month_map = '_ Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split()
 LISTING_PARAMS = set(
                 'path limit format delimiter marker end_marker prefix'.split())
+local_zone = get_localzone()
 
 
 class AccessLogProcessor(object):
@@ -54,6 +59,8 @@ class AccessLogProcessor(object):
             setattr(self, conf_tag, return_ips(conf, conf_tag))
         self.warn_percent = float(conf.get('warn_percent', '0.8'))
         self.logger = get_logger(conf, log_route='access-processor')
+        self.time_zone = common.get_time_zone(conf, self.logger, 'time_zone',
+                                              str(local_zone))
 
     def log_line_parser(self, raw_log):
         '''given a raw access log line, return a dict of the good parts'''
@@ -186,7 +193,17 @@ class AccessLogProcessor(object):
             elif object_name:
                 op_level = 'object'
 
-            aggr_key = (account, year, month, day, hour)
+            utc_line_date = datetime(int(year), int(month), int(day),
+                                     int(hour), int(minute), int(second),
+                                     tzinfo=pytz.utc)
+            line_date = utc_line_date.astimezone(self.time_zone)
+            line_date_year = line_date.strftime('%Y')
+            line_date_month = line_date.strftime('%m')
+            line_date_day = line_date.strftime('%d')
+            line_date_hour = line_date.strftime('%H')
+
+            aggr_key = (account, line_date_year, line_date_month,
+                        line_date_day, line_date_hour)
             d = hourly_aggr_info.get(aggr_key, {})
             if CIDR_support:
                 sanitize_ips(line_data)

@@ -15,6 +15,7 @@
 
 import os
 import time
+from datetime import datetime
 from paste.deploy import appconfig
 import shutil
 import hashlib
@@ -29,6 +30,10 @@ from swift.common.utils import renamer, get_logger, readconf, mkdirs, \
     TRUE_VALUES, remove_file
 from swift.common.constraints import check_mount
 from swift.common.daemon import Daemon
+from slogging import common
+from tzlocal import get_localzone
+
+local_zone = get_localzone()
 
 
 class DatabaseStatsCollector(Daemon):
@@ -51,6 +56,8 @@ class DatabaseStatsCollector(Daemon):
         mkdirs(self.target_dir)
         self.logger = get_logger(stats_conf,
                                  log_route='%s-stats' % stats_type)
+        self.time_zone = common.get_time_zone(stats_conf, self.logger,
+                                              'time_zone', str(local_zone))
 
     def run_once(self, *args, **kwargs):
         self.logger.info(_("Gathering %s stats" % self.stats_type))
@@ -66,7 +73,8 @@ class DatabaseStatsCollector(Daemon):
         raise NotImplementedError('Subclasses must override')
 
     def find_and_process(self):
-        src_filename = time.strftime(self.filename_format)
+        src_filename = datetime.now(self.time_zone).strftime(
+            self.filename_format)
         working_dir = os.path.join(self.target_dir,
                                    '.%-stats_tmp' % self.stats_type)
         shutil.rmtree(working_dir, ignore_errors=True)
