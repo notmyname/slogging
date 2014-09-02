@@ -13,6 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytz
+
+
+def get_time_zone(conf, logger, key, default):
+    """
+    Get and check time_zone value.
+    """
+    str_time_zone = conf.get(key, default)
+    try:
+        time_zone = pytz.timezone(str_time_zone)
+    except pytz.exceptions.UnknownTimeZoneError:
+        logger.warning(
+            _("Invalid Parameter %s: %s, " % (key, str_time_zone) +
+              "use default %s.") % default)
+        time_zone = pytz.timezone(default)
+    return time_zone
+
 
 def get_format_type(conf, logger, key, default):
     """

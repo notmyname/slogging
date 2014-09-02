@@ -24,6 +24,7 @@ import multiprocessing
 import Queue
 import cPickle
 import hashlib
+from tzlocal import get_localzone
 import json
 import io
 
@@ -35,6 +36,7 @@ from slogging.log_common import LogProcessorCommon, multiprocess_collate, \
 from slogging import common
 
 now = datetime.datetime.now
+local_zone = get_localzone()
 
 
 class LogProcessor(LogProcessorCommon):
@@ -139,6 +141,8 @@ class LogProcessorDaemon(Daemon):
         self.worker_count = int(c.get('worker_count', '1'))
         self._keylist_mapping = None
         self.processed_files_filename = 'processed_files.pickle.gz'
+        self.time_zone = common.get_time_zone(c, self.logger, 'time_zone',
+                                              str(local_zone))
         self.format_type = common.get_format_type(c, self.logger,
                                                   'format_type', 'csv')
 
@@ -159,13 +163,13 @@ class LogProcessorDaemon(Daemon):
             lookback_end = None
         else:
             delta_hours = datetime.timedelta(hours=self.lookback_hours)
-            lookback_start = now() - delta_hours
+            lookback_start = now(self.time_zone) - delta_hours
             lookback_start = lookback_start.strftime('%Y%m%d%H')
             if self.lookback_window == 0:
                 lookback_end = None
             else:
                 delta_window = datetime.timedelta(hours=self.lookback_window)
-                lookback_end = now() - \
+                lookback_end = now(self.time_zone) - \
                                delta_hours + \
                                delta_window
                 lookback_end = lookback_end.strftime('%Y%m%d%H')
@@ -318,13 +322,15 @@ class LogProcessorDaemon(Daemon):
             all_account_stats = collections.defaultdict(dict)
             for (account, year, month, day, hour), d in final_info.items():
                 data_ts = datetime.datetime(int(year), int(month),
-                                            int(day), int(hour))
-                time_stamp = data_ts.strftime('%Y/%m/%d %H:00:00')
+                                            int(day), int(hour),
+                                            tzinfo=self.time_zone)
+                time_stamp = data_ts.strftime('%Y/%m/%d %H:00:00 %z')
                 hourly_account_stats = \
                     self.restructure_stats_dictionary(d)
                 all_account_stats[account].update({time_stamp:
                                                    hourly_account_stats})
-            output = {'stats_data': all_account_stats}
+            output = {'time_zone': str(self.time_zone),
+                      'stats_data': all_account_stats}
         else:  # csv
             sorted_keylist_mapping = sorted(self.keylist_mapping)
             columns = ['data_ts', 'account'] + sorted_keylist_mapping
@@ -375,12 +381,14 @@ class LogProcessorDaemon(Daemon):
         if self.format_type == 'json':
             out_buf = json.dumps(output, indent=2)
             h = hashlib.md5(out_buf).hexdigest()
-            upload_name = time.strftime('%Y/%m/%d/%H/') + '%s.json.gz' % h
+            upload_name = datetime.datetime.now(self.time_zone).strftime(
+                '%Y/%m/%d/%H/') + '%s.json.gz' % h
             f = io.BytesIO(out_buf)
         else:
             out_buf = '\n'.join([','.join(row) for row in output])
             h = hashlib.md5(out_buf).hexdigest()
-            upload_name = time.strftime('%Y/%m/%d/%H/') + '%s.csv.gz' % h
+            upload_name = datetime.datetime.now(self.time_zone).strftime(
+                '%Y/%m/%d/%H/') + '%s.csv.gz' % h
             f = cStringIO.StringIO(out_buf)
         self.log_processor.internal_proxy.upload_file(f,
             self.log_processor_account,
