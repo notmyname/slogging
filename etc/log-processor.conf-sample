@@ -1,7 +1,7 @@
 # plugin section format is named "log-processor-<plugin>"
 
 [log-processor]
-swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
+swift_account = AUTH_test
 # container_name = log_processing_data
 # proxy_server_conf = /etc/swift/proxy-server.conf
 # log_facility = LOG_LOCAL0
@@ -12,7 +12,7 @@ swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
 
 [log-processor-access]
 # log_dir = /var/log/swift/
-swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
+swift_account = AUTH_test
 container_name = log_data
 source_filename_pattern = ^
     (?P<year>[0-9]{4})
@@ -37,7 +37,7 @@ class_path = slogging.access_processor.AccessLogProcessor
 
 [log-processor-stats]
 # log_dir = /var/log/swift/
-swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
+swift_account = AUTH_test
 container_name = account_stats
 # new_log_cutoff = 7200
 # unlink_log = True
@@ -49,7 +49,7 @@ class_path = slogging.stats_processor.StatsLogProcessor
 
 [log-processor-container-stats]
 # log_dir = /var/log/swift/
-swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
+swift_account = AUTH_test
 container_name = container_stats
 # new_log_cutoff = 7200
 # unlink_log = True

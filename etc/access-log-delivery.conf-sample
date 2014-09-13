@@ -1,5 +1,5 @@
 [access-log-delivery]
-swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
+swift_account = AUTH_test
 # container_name = access_log_delivery_data
 # proxy_server_conf = /etc/swift/proxy-server.conf
 # log_facility = LOG_LOCAL0
@@ -10,7 +10,7 @@ swift_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
 # processed_files_object_name = processed_files.pickle.gz
 # frequency = 3600
 # target_container = .ACCESS_LOGS
-log_source_account = AUTH_7abbc116-8a07-4b63-819d-02715d3e0f31
+log_source_account = AUTH_test
 # log_source_container_name = log_data
 # metadata_key = x-container-meta-access-log-delivery
 # memcache_servers =
