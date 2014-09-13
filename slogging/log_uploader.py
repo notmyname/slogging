@@ -20,7 +20,7 @@ import time
 import gzip
 import re
 import sys
-from paste.deploy import appconfig
+from paste.deploy import appconfig, loadfilter
 import zlib
 
 from slogging.internal_proxy import InternalProxy
@@ -67,7 +67,10 @@ class LogUploader(Daemon):
                                             '/etc/swift/proxy-server.conf')
         proxy_server_conf = appconfig('config:%s' % proxy_server_conf_loc,
                                       name='proxy-server')
-        self.internal_proxy = InternalProxy(proxy_server_conf)
+        memcache = loadfilter('config:%s' % proxy_server_conf_loc,
+                              name='cache')(object).memcache
+        self.internal_proxy = InternalProxy(proxy_server_conf,
+                                            memcache=memcache)
         self.new_log_cutoff = int(cutoff or
                                   uploader_conf.get('new_log_cutoff', '7200'))
         self.unlink_log = uploader_conf.get('unlink_log', 'true').lower() in \

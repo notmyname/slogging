@@ -21,9 +21,10 @@ import hashlib
 import urllib
 import sqlite3
 
+from swift.account.backend import AccountBroker
 from swift.account.server import DATADIR as account_server_data_dir
+from swift.container.backend import ContainerBroker
 from swift.container.server import DATADIR as container_server_data_dir
-from swift.common.db import AccountBroker, ContainerBroker
 from swift.common.utils import renamer, get_logger, readconf, mkdirs, \
     TRUE_VALUES, remove_file
 from swift.common.constraints import check_mount
@@ -174,7 +175,7 @@ class ContainerStatsCollector(DatabaseStatsCollector):
         line_data = None
         broker = ContainerBroker(db_path)
         if not broker.is_deleted():
-            info = broker.get_info(include_metadata=bool(self.metadata_keys))
+            info = broker.get_info()
             encoded_container_name = urllib.quote(info['container'])
             line_data = '"%s","%s",%d,%d' % (
                 info['account'], encoded_container_name,
