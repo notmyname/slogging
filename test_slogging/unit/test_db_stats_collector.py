@@ -23,7 +23,8 @@ from shutil import rmtree
 from slogging import db_stats_collector
 from tempfile import mkdtemp
 from test_slogging.unit import FakeLogger
-from swift.common.db import AccountBroker, ContainerBroker
+from swift.account.backend import AccountBroker
+from swift.container.backend import ContainerBroker
 from swift.common.utils import mkdirs
 
 

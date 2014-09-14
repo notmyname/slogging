@@ -16,9 +16,10 @@
 # TODO: Tests
 
 import unittest
-import webob
 import tempfile
 import json
+
+from swift.common import swob
 
 from slogging import internal_proxy
 
@@ -58,7 +59,7 @@ class DumbApplication(object):
                 body = ''
         else:
             body = self.body
-        resp = webob.Response(request=req, body=body,
+        resp = swob.Response(request=req, body=body,
                               conditional_response=True)
         try:
             resp.status_int = self.status_codes.pop(0)
@@ -72,9 +73,9 @@ class DumbApplication(object):
 
 class TestInternalProxy(unittest.TestCase):
 
-    def test_webob_request_copy(self):
-        req = webob.Request.blank('/')
-        req2 = internal_proxy.webob_request_copy(req)
+    def test_swob_request_copy(self):
+        req = swob.Request.blank('/')
+        req2 = internal_proxy.swob_request_copy(req)
         self.assertEquals(req.path, req2.path)
         self.assertEquals(req.path_info, req2.path_info)
         self.assertFalse(req is req2)
@@ -86,8 +87,8 @@ class TestInternalProxy(unittest.TestCase):
         internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy()
-        req = webob.Request.blank('/')
-        orig_req = internal_proxy.webob_request_copy(req)
+        req = swob.Request.blank('/')
+        orig_req = internal_proxy.swob_request_copy(req)
         resp = p._handle_request(req)
         self.assertEquals(req.path_info, orig_req.path_info)
 
@@ -96,8 +97,8 @@ class TestInternalProxy(unittest.TestCase):
         internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy(retries=3)
-        req = webob.Request.blank('/')
-        orig_req = internal_proxy.webob_request_copy(req)
+        req = swob.Request.blank('/')
+        orig_req = internal_proxy.swob_request_copy(req)
         resp = p._handle_request(req)
         self.assertEquals(req.path_info, orig_req.path_info)
         self.assertEquals(p.upload_app.call_count, 2)
@@ -126,8 +127,8 @@ class TestInternalProxy(unittest.TestCase):
         internal_proxy.Application = DumbApplicationFactory(
                                             status_codes)
         p = internal_proxy.InternalProxy(retries=3)
-        req = webob.Request.blank('/')
-        orig_req = internal_proxy.webob_request_copy(req)
+        req = swob.Request.blank('/')
+        orig_req = internal_proxy.swob_request_copy(req)
         resp = p._handle_request(req)
         self.assertEquals(req.path_info, orig_req.path_info)
         self.assertEquals(p.upload_app.call_count, 3)
