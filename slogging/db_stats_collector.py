@@ -190,7 +190,7 @@ class ContainerStatsCollector(DatabaseStatsCollector):
                 info['object_count'], info['bytes_used'])
             if self.metadata_keys:
                 metadata_results = ','.join(
-                    [info['metadata'].get(mkey) and '1' or ''
+                    [broker.metadata.get(mkey) and '1' or ''
                      for mkey in self.metadata_keys])
                 line_data += ',%s' % metadata_results
             line_data += '\n'
