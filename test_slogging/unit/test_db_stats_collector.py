@@ -55,7 +55,7 @@ class TestDbStats(unittest.TestCase):
                                         account='test_acc')
         account_db.initialize()
         account_db.put_container('test_container', time.time(),
-                                      None, 10, 1000)
+                                      None, 10, 1000, 1)
         info = stat.get_data("%s/acc.db" % self.accounts)
         self.assertEquals('''"test_acc",1,10,1000\n''', info)
 
@@ -87,7 +87,7 @@ class TestDbStats(unittest.TestCase):
                                         account='test_acc_%s' % i)
             account_db.initialize()
             account_db.put_container('test_container', time.time(),
-                                      None, 10, 1000)
+                                      None, 10, 1000, 1)
             # this will "commit" the data
             account_db.get_info()
             output_data.add('''"test_acc_%s",1,10,1000''' % i),
