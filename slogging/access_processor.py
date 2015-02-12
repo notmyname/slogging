@@ -194,8 +194,7 @@ class AccessLogProcessor(object):
                 op_level = 'object'
 
             utc_line_date = datetime(int(year), int(month), int(day),
-                                     int(hour), int(minute), int(second),
-                                     tzinfo=pytz.utc)
+                                     int(hour), 0, 0, tzinfo=pytz.utc)
             line_date = utc_line_date.astimezone(self.time_zone)
             line_date_year = line_date.strftime('%Y')
             line_date_month = line_date.strftime('%m')

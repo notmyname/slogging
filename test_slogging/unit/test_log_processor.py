@@ -333,6 +333,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
             def __init__(self, lookback_hours, lookback_window):
                 self.lookback_hours = lookback_hours
                 self.lookback_window = lookback_window
+                self.time_zone = 'UTC'
 
         try:
             d = datetime.datetime
@@ -347,7 +348,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
                     '2008061903'],
                 ]:
 
-                log_processor.now = lambda: x[0]
+                log_processor.now = lambda tz: x[0]
 
                 d = MockLogProcessorDaemon(x[1], x[2])
                 self.assertEquals((x[3], x[4]), d.get_lookback_interval())
@@ -518,6 +519,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
         class MockLogProcessorDaemon(log_processor.LogProcessorDaemon):
             def __init__(self):
                 self._keylist_mapping = {'a': None, 'b': None, 'c': None}
+                self.format_type = 'csv'
 
         data_in = {
             ('acct1', 2010, 1, 1, 0): {'a': 1, 'b': 2, 'c': 3},
@@ -548,7 +550,7 @@ class TestLogProcessorDaemon(unittest.TestCase):
             real_strftime = time.strftime
             mock_strftime_return = '2010/03/02/01/'
 
-            def mock_strftime(format):
+            def mock_strftime(format, t):
                 self.assertEquals('%Y/%m/%d/%H/', format)
                 return mock_strftime_return
             log_processor.time.strftime = mock_strftime
@@ -594,6 +596,8 @@ class TestLogProcessorDaemon(unittest.TestCase):
                     self.log_processor_account = 'account'
                     self.log_processor_container = 'container'
                     self.processed_files_filename = 'filename'
+                    self.format_type = 'csv'
+                    self.time_zone = None
 
             MockLogProcessorDaemon(self, expected_filename, expected_output).\
                 store_output(data_in)
