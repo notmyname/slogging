@@ -65,6 +65,7 @@ class DumbApplication(object):
             resp.status_int = self.status_codes.pop(0)
         except IndexError:
             resp.status_int = self.default_status_code
+        resp.app_iter = iter(body)
         return resp
 
     def update_request(self, req):
