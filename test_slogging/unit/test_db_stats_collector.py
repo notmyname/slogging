@@ -95,31 +95,6 @@ class TestDbStats(unittest.TestCase):
         self.assertEqual(len(output_data), 10)
         return stat, output_data
 
-    def _drop_metadata_col(self, broker, acc_name):
-        broker.conn.execute('''drop table container_stat''')
-        broker.conn.executescript("""
-            CREATE TABLE container_stat (
-                account TEXT DEFAULT '%s',
-                container TEXT DEFAULT 'test_con',
-                created_at TEXT,
-                put_timestamp TEXT DEFAULT '0',
-                delete_timestamp TEXT DEFAULT '0',
-                object_count INTEGER,
-                bytes_used INTEGER,
-                reported_put_timestamp TEXT DEFAULT '0',
-                reported_delete_timestamp TEXT DEFAULT '0',
-                reported_object_count INTEGER DEFAULT 0,
-                reported_bytes_used INTEGER DEFAULT 0,
-                hash TEXT default '00000000000000000000000000000000',
-                id TEXT,
-                status TEXT DEFAULT '',
-                status_changed_at TEXT DEFAULT '0'
-            );
-
-            INSERT INTO container_stat (object_count, bytes_used)
-                VALUES (1, 10);
-        """ % acc_name)
-
     def _gen_container_stat(self, set_metadata=False, drop_metadata=False):
         if set_metadata:
             self.conf['metadata_keys'] = 'test1,test2'
@@ -148,8 +123,6 @@ class TestDbStats(unittest.TestCase):
             else:
                 output_data.add('''"test_acc_%s","test_con",1,10%s''' %
                                 (i, metadata_output))
-            if drop_metadata:
-                self._drop_metadata_col(cont_db, 'test_acc_%s' % i)
 
         self.assertEqual(len(output_data), 10)
         return stat, output_data
