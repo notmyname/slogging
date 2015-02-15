@@ -63,7 +63,7 @@ class TestDbStats(unittest.TestCase):
         stat = db_stats_collector.ContainerStatsCollector(self.conf)
         container_db = ContainerBroker("%s/con.db" % self.containers,
                                      account='test_acc', container='test_con')
-        container_db.initialize()
+        container_db.initialize(storage_policy_index=0)
         container_db.put_object('test_obj', time.time(), 10, 'text', 'faketag')
         info = stat.get_data("%s/con.db" % self.containers)
         self.assertEquals('''"test_acc","test_con",1,10\n''', info)
@@ -72,7 +72,7 @@ class TestDbStats(unittest.TestCase):
         stat = db_stats_collector.ContainerStatsCollector(self.conf)
         container_db = ContainerBroker("%s/con.db" % self.containers,
                                      account='test_acc', container='test_con')
-        container_db.initialize()
+        container_db.initialize(storage_policy_index=0)
         container_db.put_object('test_obj', time.time(), 10, 'text', 'faketag')
         info = stat.get_data("%s/con.db" % self.containers)
         self.assertEquals('''"test_acc","test_con",1,10\n''', info)
@@ -106,7 +106,7 @@ class TestDbStats(unittest.TestCase):
                 "%s/container-stats-201001010%s-%s.db" % (self.containers, i,
                                                           uuid.uuid4().hex),
                  account='test_acc_%s' % i, container='test_con')
-            cont_db.initialize()
+            cont_db.initialize(storage_policy_index=0)
             cont_db.put_object('test_obj', time.time(), 10, 'text', 'faketag')
             metadata_output = ''
             if set_metadata:
