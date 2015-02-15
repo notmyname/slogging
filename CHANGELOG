@@ -1,3 +1,9 @@
+slogging (1.2.0)
+
+  - Adapted to work with more recent version of Swift
+  - Now allows for json or csv output
+  - Now allows for outputting usage data in different timezones
+
 slogging (1.1.8)
 
   - added metadata to objects when they are uploaded by log-uploader
