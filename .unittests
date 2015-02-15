@@ -1,4 +1,4 @@
 #!/bin/bash
 
-nosetests test_slogging/unit --exe --with-coverage --cover-package slogging --cover-erase
+nosetests test_slogging/unit --exe --with-coverage --cover-package slogging --cover-erase $@
 rm -f .coverage
