@@ -96,7 +96,7 @@ class TestDbStats(unittest.TestCase):
         self.assertEqual(len(output_data), 10)
         return stat, output_data
 
-    def _gen_container_stat(self, set_metadata=False, drop_metadata=False):
+    def _gen_container_stat(self, set_metadata=False):
         if set_metadata:
             self.conf['metadata_keys'] = 'test1,test2'
             # webob runs title on all headers
@@ -119,11 +119,8 @@ class TestDbStats(unittest.TestCase):
                     metadata_output = ',,1'
             # this will "commit" the data
             cont_db.get_info()
-            if drop_metadata:
-                output_data.add('''"test_acc_%s","test_con",1,10,,''' % i)
-            else:
-                output_data.add('''"test_acc_%s","test_con",1,10%s''' %
-                                (i, metadata_output))
+            output_data.add('''"test_acc_%s","test_con",1,10%s''' %
+                            (i, metadata_output))
 
         self.assertEqual(len(output_data), 10)
         return stat, output_data
@@ -151,21 +148,6 @@ class TestDbStats(unittest.TestCase):
     def test_account_stat_run_once_container_metadata(self):
 
         stat, output_data = self._gen_container_stat(set_metadata=True)
-        stat.run_once()
-        stat_file = os.listdir(self.log_dir)[0]
-        with open(os.path.join(self.log_dir, stat_file)) as stat_handle:
-            headers = stat_handle.readline()
-            self.assert_(headers.startswith('Account Hash,Container Name,'))
-            for i in range(10):
-                data = stat_handle.readline()
-                output_data.discard(data.strip())
-
-        self.assertEqual(len(output_data), 0)
-
-    def test_account_stat_run_once_container_no_metadata(self):
-
-        stat, output_data = self._gen_container_stat(set_metadata=True,
-                                                     drop_metadata=True)
         stat.run_once()
         stat_file = os.listdir(self.log_dir)[0]
         with open(os.path.join(self.log_dir, stat_file)) as stat_handle:
