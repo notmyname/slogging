@@ -69,14 +69,15 @@ class TestDbStats(unittest.TestCase):
         self.assertEquals('''"test_acc","test_con",1,10\n''', info)
 
     def test_container_stat_get_metadata(self):
-        stat = db_stats_collector.ContainerStatsCollector(self.conf)
         container_db = ContainerBroker("%s/con.db" % self.containers,
                                      account='test_acc', container='test_con')
         container_db.initialize(storage_policy_index=0)
         container_db.put_object('test_obj', time.time(), 10, 'text', 'faketag')
+        container_db.update_metadata({'X-Container-Meta-Test1': ('val', 1000)})
+        self.conf['metadata_keys'] = 'test1,test2'
+        stat = db_stats_collector.ContainerStatsCollector(self.conf)
         info = stat.get_data("%s/con.db" % self.containers)
-        self.assertEquals('''"test_acc","test_con",1,10\n''', info)
-        container_db.update_metadata({'test1': ('val', 1000)})
+        self.assertEquals('''"test_acc","test_con",1,10,1,\n''', info)
 
     def _gen_account_stat(self):
         stat = db_stats_collector.AccountStatsCollector(self.conf)
