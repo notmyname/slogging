@@ -104,6 +104,14 @@ class AccessLogProcessor(object):
             self.logger.debug(_('Invalid path: %(error)s from data: %(log)s') %
             {'error': e, 'log': repr(raw_log)})
             return {}
+        if version != 'v1':
+            # "In the wild" places this can be caught are with auth systems
+            # that use the same endpoint as the rest of the Swift API (eg
+            # tempauth or swauth). But if the Swift API ever does change, this
+            # protects that too.
+            self.logger.debug(_('Unexpected Swift version string: found ' \
+                                '"%s" expected "v1"') % version)
+            return {}
         if container_name is not None:
             container_name = container_name.split('?', 1)[0]
         if object_name is not None:
