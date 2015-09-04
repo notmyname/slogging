@@ -72,6 +72,38 @@ class TestAccessProcessor(unittest.TestCase):
         expected['query'] = query
         self.assertEquals(res, expected)
 
+    def test_log_line_parser_query_args_with_slash_delimiter_to_container(self):
+        p = access_processor.AccessLogProcessor({})
+        log_line = [str(x) for x in range(18)]
+        log_line[1] = 'proxy-server'
+        log_line[4] = '1/Jan/3/4/5/6'
+        query = 'prefix=YYYY/MM/DD'
+        log_line[6] = '/v1/a/c?%s' % query
+        log_line = 'x' * 16 + ' '.join(log_line)
+        res = p.log_line_parser(log_line)
+
+        self.assertEquals(res['object_name'], None)
+        self.assertEquals(res['container_name'], 'c')
+        self.assertEquals(res['account'], 'a')
+        self.assertEquals(res['request'], '/v1/a/c')
+        self.assertEquals(res['query'], query)
+
+    def test_log_line_parser_query_args_with_slash_delimiter_to_account(self):
+        p = access_processor.AccessLogProcessor({})
+        log_line = [str(x) for x in range(18)]
+        log_line[1] = 'proxy-server'
+        log_line[4] = '1/Jan/3/4/5/6'
+        query = 'prefix=YYYY/MM/DD'
+        log_line[6] = '/v1/a?%s' % query
+        log_line = 'x' * 16 + ' '.join(log_line)
+        res = p.log_line_parser(log_line)
+
+        self.assertEquals(res['object_name'], None)
+        self.assertEquals(res['container_name'], None)
+        self.assertEquals(res['account'], 'a')
+        self.assertEquals(res['request'], '/v1/a')
+        self.assertEquals(res['query'], query)
+
     def test_log_line_parser_field_count(self):
         p = access_processor.AccessLogProcessor({})
         # too few fields
