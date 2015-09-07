@@ -20,6 +20,7 @@ from tzlocal import get_localzone
 from datetime import datetime
 from slogging import common
 import pytz
+from urlparse import urlparse
 
 # conditionalize the return_ips method based on whether or not iptools
 # is present in the system. Without iptools, you will lack CIDR support.
@@ -98,6 +99,9 @@ class AccessLogProcessor(object):
                     {'found': server, 'expected': self.server_name})
             return {}
         try:
+            parsed_url = urlparse(request)
+            request = parsed_url.path
+            query = parsed_url.query
             (version, account, container_name, object_name) = \
                 split_path(request, 2, 4, True)
         except ValueError, e:
@@ -112,15 +116,9 @@ class AccessLogProcessor(object):
             self.logger.debug(_('Unexpected Swift version string: found ' \
                                 '"%s" expected "v1"') % version)
             return {}
-        if container_name is not None:
-            container_name = container_name.split('?', 1)[0]
-        if object_name is not None:
-            object_name = object_name.split('?', 1)[0]
-        account = account.split('?', 1)[0]
-        query = None
-        if '?' in request:
-            request, query = request.split('?', 1)
+        if query != "":
             args = query.split('&')
+            d['query'] = query
             # Count each query argument. This is used later to aggregate
             # the number of format, prefix, etc. queries.
             for q in args:
@@ -138,8 +136,6 @@ class AccessLogProcessor(object):
         d['lb_ip'] = lb_ip
         d['method'] = method
         d['request'] = request
-        if query:
-            d['query'] = query
         d['http_version'] = http_version
         d['code'] = code
         d['referrer'] = referrer
