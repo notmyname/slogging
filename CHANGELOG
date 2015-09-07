@@ -1,3 +1,10 @@
+slogging (1.2.1)
+
+  - Fix parsing account and container requests if they also include a
+    query parameter with a slash in it.
+  - Future-proofed some Swift API version string parsing in case it
+    ever changes
+
 slogging (1.2.0)
 
   - Adapted to work with more recent version of Swift
